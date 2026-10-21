@@ -13,10 +13,17 @@ assets/           Logo y archivos compartidos
 ## Agregar una página nueva
 
 1. Copiar el `.html` a la carpeta `paginas/`.
-2. En `index.html`, sumar una línea al principio de `PAGINAS`:
+2. En el `<head>` del nuevo `.html`, dejar la pestaña como el resto del sitio:
 
-   ```js
-   { nombre: 'Nombre visible', archivo: 'paginas/archivo.html', descripcion: 'Qué muestra', fecha: '2026-10-21' },
+   ```html
+   <title>COM</title>
+   <link rel="icon" type="image/png" href="../assets/logo-ciemsa.png">
    ```
 
-3. Commit y push desde GitHub Desktop.
+3. En `index.html`, sumar una línea al principio de `PAGINAS` (`color: 'blue'` opcional; sin él el ícono es verde):
+
+   ```js
+   { nombre: 'Nombre visible', archivo: 'paginas/archivo.html', color: 'blue' },
+   ```
+
+4. Commit y push.
