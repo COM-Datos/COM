@@ -81,7 +81,8 @@ function render(filtro) {
     const li = document.createElement('li');
     const a = document.createElement('a');
     a.className = 'item' + (p.color ? ' acc-' + p.color : '');
-    a.href = p.archivo;
+    // ?v= evita que el navegador muestre una versión vieja guardada en caché
+    a.href = p.archivo + '?v=' + Date.now();
     a.innerHTML = `<div class="item-icon">${icono}</div><div class="item-name"></div><div class="item-arrow">›</div>`;
     a.querySelector('.item-name').textContent = p.nombre;
     li.appendChild(a);
