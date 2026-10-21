@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>COM</title>
+<link rel="icon" type="image/png" href="assets/logo-ciemsa.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F6F3;
+  --surface:#FFFFFF;
+  --border:#E2DED6;
+  --border2:#D0CBCB;
+  --text:#1A1714;
+  --text2:#6B6560;
+  --text3:#9E9890;
+  --teal:#39745E;   --teal-bg:#DCEDE4;
+  --shadow:0 4px 20px rgba(26,23,20,.06),0 1px 3px rgba(26,23,20,.05);
+  --shadow-hover:0 12px 32px rgba(26,23,20,.10),0 2px 6px rgba(26,23,20,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;color:var(--text);min-height:100vh;
+  background:
+    radial-gradient(circle at 15% 8%, #EDEEF9 0%, transparent 45%),
+    radial-gradient(circle at 88% 92%, #E7F3EE 0%, transparent 45%),
+    var(--bg);
+  background-attachment:fixed;
+  padding:clamp(2rem,6vh,4.5rem) 1rem;
+}
+.cover{max-width:760px;margin:0 auto}
+.headline{font-size:clamp(30px,5.5vw,46px);font-weight:700;letter-spacing:-1.2px;line-height:1.08;text-align:center;text-wrap:balance}
+.rule{width:42px;height:3px;border-radius:2px;background:var(--teal);margin:1.4rem auto 2.4rem}
+.search{width:100%;font:inherit;font-size:14.5px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:.85rem 1.1rem;box-shadow:var(--shadow);outline:none;margin-bottom:1rem}
+.search:focus{border-color:var(--teal)}
+.list{display:flex;flex-direction:column;gap:10px;list-style:none}
+.item{display:flex;align-items:center;gap:1rem;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1rem 1.2rem;text-decoration:none;color:inherit;box-shadow:var(--shadow);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.item:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);border-color:var(--border2)}
+.item-icon{flex:none;width:42px;height:42px;border-radius:12px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center}
+.item-icon svg{width:20px;height:20px;fill:none;stroke:var(--teal);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.item-body{flex:1;min-width:0}
+.item-name{font-size:15px;font-weight:600;letter-spacing:-.1px}
+.item-desc{font-size:13px;color:var(--text2);margin-top:2px}
+.item-date{flex:none;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3)}
+.item-arrow{flex:none;color:var(--text3);font-size:18px}
+@media (max-width:480px){.item-date{display:none}}
+.empty{text-align:center;color:var(--text3);font-size:14px;padding:2rem 0}
+.foot{margin-top:2.5rem;text-align:center;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3);letter-spacing:.3px}
+</style>
+</head>
+<body>
+<div class="cover">
+  <h1 class="headline">Centro Operativo de Montevideo</h1>
+  <div class="rule"></div>
+  <input class="search" id="buscar" type="search" placeholder="Buscar…" autocomplete="off">
+  <ul class="list" id="lista"></ul>
+  <p class="empty" id="vacio" hidden></p>
+  <p class="foot" id="total"></p>
+</div>
+<script>
+// Para agregar una página: copiar el .html a la carpeta paginas/ y sumar una línea acá.
+// Las más nuevas van arriba.
+const PAGINAS = [
+  // { nombre: 'Nombre visible', archivo: 'paginas/archivo.html', descripcion: 'Qué muestra', fecha: '2026-10-21' },
+];
+
+const lista = document.getElementById('lista');
+const vacio = document.getElementById('vacio');
+const total = document.getElementById('total');
+const icono = '<svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h3"/><path d="M9 12h6M9 16h4"/></svg>';
+
+function normalizar(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+function formatoFecha(iso) {
+  const [a, m, d] = (iso || '').split('-');
+  return d ? `${d}/${m}/${a}` : '';
+}
+
+function render(filtro) {
+  const q = normalizar(filtro);
+  const items = PAGINAS.filter(p => normalizar(p.nombre + ' ' + p.descripcion).includes(q));
+  lista.innerHTML = '';
+  for (const p of items) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.className = 'item';
+    a.href = p.archivo;
+    a.innerHTML = `<div class="item-icon">${icono}</div>
+      <div class="item-body"><div class="item-name"></div><div class="item-desc"></div></div>
+      <div class="item-date">${formatoFecha(p.fecha)}</div><div class="item-arrow">›</div>`;
+    a.querySelector('.item-name').textContent = p.nombre;
+    a.querySelector('.item-desc').textContent = p.descripcion || '';
+    li.appendChild(a);
+    lista.appendChild(li);
+  }
+  vacio.hidden = items.length > 0;
+  vacio.textContent = PAGINAS.length ? 'No hay resultados para esa búsqueda.' : 'Todavía no hay páginas cargadas.';
+  total.textContent = PAGINAS.length === 1 ? '1 página' : `${PAGINAS.length} páginas`;
+}
+
+document.getElementById('buscar').addEventListener('input', e => render(e.target.value));
+render('');
+
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) window.location.reload();
+});
+</script>
+</body>
+</html>
