@@ -459,7 +459,7 @@ function renderPlan(ds){
     active.forEach(r=>{
       const p=parseDate(r[COL.fecha]);
       const rowid='r'+(++_rid);
-      const extra={_circ:(r[COL.circuito]||'').trim(),_bolsas:''};
+      const extra={_circ:(r[COL.circuito]||'').trim(),_bolsas:'NO'};
       if(p&&VALID_H.has(p.h)&&p.min===0)normal.push({c:r,_h:p.h,_cat:r._cat,_rowid:rowid,...extra});
       else anomalos.push({c:r,_t:p?`${p.h}:${String(p.min).padStart(2,'0')}`:'?',_cat:r._cat,_rowid:rowid,...extra});
     });
