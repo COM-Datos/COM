@@ -38,6 +38,8 @@
 *,*::before,*::after{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:400 15px/1.5 var(--font-b);padding-inline:16px;padding-block:20px 40px}
 .app{max-width:1320px;margin-inline:auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 16px}
+.tema{order:2;margin-left:auto;white-space:nowrap}
 h1,h2{font-family:var(--font-d);margin:0;text-wrap:balance}
 h1{font-size:38px;line-height:1;font-weight:700;letter-spacing:.01em}
 h2{font-size:18px;line-height:1.1;font-weight:600;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:baseline;gap:8px}
@@ -124,7 +126,8 @@ pre{margin:8px 0 0;background:var(--code-bg);border:1px solid var(--line);border
 </head>
 <body>
 <main class="app">
-  <header style="display:flex;align-items:flex-start;gap:16px">
+  <header>
+    <label class="chk tema" title="Tildado: fondo oscuro. Destildado: fondo blanco normal. Se recuerda para la próxima vez."><input type="checkbox" id="o-night">Modo nocturno</label>
     <div class="brand">
       <svg width="58" height="40" viewBox="0 0 58 40" aria-hidden="true"><path d="M6 8 H30 V32 H52" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-dasharray="3 5" stroke-linecap="round"/><circle cx="6" cy="8" r="5" fill="currentColor"/><circle cx="30" cy="8" r="5" fill="currentColor"/><circle cx="30" cy="32" r="5" fill="currentColor"/><circle cx="52" cy="32" r="5" fill="currentColor"/></svg>
       <div>
@@ -132,7 +135,7 @@ pre{margin:8px 0 0;background:var(--code-bg);border:1px solid var(--line);border
         <p class="lede">Pintá las cuadras que faltan y la herramienta arma sola el recorrido del camión, o marcá las esquinas a mano, en orden. Todo respeta el sentido de las calles, el camión puede pasar más de una vez por la misma esquina y el CSV de paradas queda listo para el RSU back office.</p>
       </div>
     </div>
-    <a class="btn" href="../index.html" onclick="this.href='../index.html?v='+Date.now()" style="margin-left:auto"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Volver</a>
+    <a class="btn" href="../index.html" onclick="this.href='../index.html?v='+Date.now()" style="order:3"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Volver</a>
   </header>
 
   <section class="work" aria-label="Trazado del recorrido">
@@ -205,6 +208,7 @@ pre{margin:8px 0 0;background:var(--code-bg);border:1px solid var(--line);border
         <p class="hint paintnote"><span class="swatch" aria-hidden="true"></span><span>Pintá las cuadras que faltan hacer. Un solo paso recoge ambos lados de la calle.</span></p>
         <p class="hint">Giros: en un cruce con semáforo, desde una calle de doble sentido no se dobla a la izquierda, salvo en los semáforos que marques como habilitados con la herramienta «Semáforos».</p>
         <div id="p-sum" class="summary"></div>
+        <label class="chk" title="Las cuadras pintadas sobre el borde del circuito se recorren con el interior a la derecha del camión, y el tránsito no sale del contorno de lo pintado."><input id="o-limit" type="checkbox" checked>Respetar el límite del circuito (borde en sentido hacia el interior, sin salir de la capa)</label>
         <div class="fields">
           <div class="full"><label>Salida del camión</label>
             <div class="row"><button id="p-start" type="button">Elegir esquina de salida</button><button id="p-start-x" class="ghost" type="button" hidden>Quitar</button></div>
@@ -431,7 +435,7 @@ function stopPath(a,b){
 }
 
 /* ================= estado ================= */
-var S={stops:[],sel:-1,hist:[],opts:{time:3,type:'RECOLECCION',ttype:'TRANSITO',name:'',snap:true,auto:false,turns:true,shape:true}};
+var S={stops:[],sel:-1,hist:[],opts:{time:3,type:'RECOLECCION',ttype:'TRANSITO',name:'',snap:true,auto:false,turns:true,shape:true,limit:true}};
 var V={cx:mmx(-56.17),cy:mmy(-34.88),k:1000000},M={W:0,H:0,dpr:1,raf:0,ptrs:{},drag:null,pinch:null,hover:-1,flag:null,hl:-1,route:[],routeLen:0,hits:[],fitted:false};
 var csv='',downloads=null,clearTimer=null;
 
@@ -610,6 +614,27 @@ function ppPath(a,b){
   if(nodesOf(b).indexOf(n1)<0&&Math.hypot(C.nodeX[n1]-b.x,C.nodeY[n1]-b.y)*rc>40)return null;
   for(i=0;i+1<pp.length;i++)if(arcId(pp[i],pp[i+1])<0)return null;
   return pp;
+}
+/* modo nocturno: la casilla fija data-theme y se recuerda; sin elección previa sigue al sistema */
+var TKEY='trazador-rsu-tema';
+function isNight(){
+  var a=document.documentElement.getAttribute('data-theme');
+  if(a==='dark')return true;
+  if(a==='light')return false;
+  return !!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+function bindNight(){
+  var el=$('o-night'),g=null;
+  try{g=localStorage.getItem(TKEY)}catch(e){}
+  if(g==='dark'||g==='light')document.documentElement.setAttribute('data-theme',g);
+  el.checked=isNight();
+  el.addEventListener('change',function(){
+    var v=el.checked?'dark':'light';
+    document.documentElement.setAttribute('data-theme',v);
+    try{localStorage.setItem(TKEY,v)}catch(e){}
+    scheduleDraw();
+  });
+  try{new MutationObserver(function(){el.checked=isNight()}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']})}catch(e){}
 }
 function parseCsv(t){
   var rows=[],row=[],f='',q=false;
@@ -1119,7 +1144,7 @@ function localDownloads(){
 }
 
 /* ================= pintar cuadras y armar el recorrido solo ================= */
-var PKEY='trazador-rsu-v4-paint',INF=1e9,COVER=true;
+var PKEY='trazador-rsu-v4-paint',INF=1e9,COVER=true,OUTPEN=300;
 /* estilos de recorrido: penalizaciones en metros equivalentes. Más prolijo = giros y cortes de calle más caros.
    t1/t2/t3: giro de 35-100° / 100-150° / más de 150°; u: vuelta en U (solo callejón sin salida); left: extra por giro
    a la izquierda; run: costo de empezar un nuevo tramo de recolección que no sigue derecho al anterior. */
@@ -1350,10 +1375,38 @@ function paintHover(x,y){
   if(P.tool==='signal'){signalHover(x,y);return}
   updateBlockHover(x,y);
 }
+function limitForDraw(){
+  var key=P.set.size+'|'+Math.round(P.len)+'|'+((S.opts.limit!==false)?1:0);
+  if(P.limKey===key)return P.lim;
+  P.limKey=key;P.lim=null;
+  if(S.opts.limit===false||!P.blocks||!P.set.size||P.set.size>900)return null;
+  var bl=[];P.set.forEach(function(bi){bl.push(P.blocks[bi])});
+  try{P.lim=boundaryInfo(bl);P.limBl=bl}catch(e){P.lim=null}
+  return P.lim;
+}
 function drawPainted(ctx,X,Y,mp,Cc,vb){
   var bl=P.blocks,col=Cc('--paint'),wd=mp<2.5?9:mp<6?7:5.5;
   function trace(b){var p=b.p;ctx.moveTo(X(p[0]),Y(p[1]));for(var i=2;i<p.length;i+=2)ctx.lineTo(X(p[i]),Y(p[i+1]))}
   ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
+  if(P.on&&bl){
+    var lm=limitForDraw();
+    if(lm){
+      ctx.globalAlpha=.85;ctx.setLineDash([8,6]);ctx.lineWidth=1.8;ctx.strokeStyle=Cc('--map-text');
+      lm.rings.forEach(function(r){
+        if(r.b[2]<vb[0]||r.b[0]>vb[2]||r.b[3]<vb[1]||r.b[1]>vb[3])return;
+        ctx.beginPath();for(var k=0;k<r.v.length;k+=2){if(k)ctx.lineTo(X(r.v[k]),Y(r.v[k+1]));else ctx.moveTo(X(r.v[k]),Y(r.v[k+1]))}ctx.closePath();ctx.stroke();
+      });
+      ctx.setLineDash([]);ctx.globalAlpha=1;ctx.fillStyle=Cc('--accent');ctx.strokeStyle=Cc('--map-halo');ctx.lineWidth=1.6;
+      lm.bnd.forEach(function(bd){
+        var b=P.limBl[bd.blk];
+        if(b.mx<vb[0]||b.mx>vb[2]||b.my<vb[1]||b.my>vb[3]||b.len/mp<40)return;
+        var p=b.p,n=p.length/2,dx=p[2*n-2]-p[0],dy=p[2*n-1]-p[1];
+        if(bd.allowRev){dx=-dx;dy=-dy}
+        ctx.save();ctx.translate(X(b.mx),Y(b.my));ctx.rotate(Math.atan2(-dy,dx));
+        ctx.beginPath();ctx.moveTo(7,0);ctx.lineTo(-5,-5.5);ctx.lineTo(-5,5.5);ctx.closePath();ctx.stroke();ctx.fill();ctx.restore();
+      });
+    }
+  }
   if(P.on&&bl&&P.hover>=0&&bl[P.hover]){ctx.beginPath();trace(bl[P.hover]);ctx.globalAlpha=.8;ctx.strokeStyle=P.tool==='erase'?Cc('--fg'):Cc('--map-hl');ctx.lineWidth=wd+5;ctx.stroke()}
   if(bl&&P.set.size){
     ctx.beginPath();
@@ -1392,7 +1445,106 @@ function setBusy(b){
 }
 function rnd(n){return Math.floor(Math.random()*n)}
 
-async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
+/* ---------- límite del circuito, deducido de las cuadras pintadas ----------
+   La red de cuadras pintadas encierra manzanas. Su contorno exterior es el límite (la "capa"). Las cuadras pintadas que
+   están sobre ese contorno (con el exterior de un lado y una manzana del circuito del otro) se recorren siempre con el
+   interior del circuito a la derecha del camión (sentido horario), y ninguna calle de fuera del límite se usa de tránsito. */
+function boundaryInfo(blist){
+  var nb=blist.length,i,h,q;
+  if(!nb)return null;
+  var hf=new Int32Array(2*nb),ht=new Int32Array(2*nb),hang=new Float64Array(2*nb),outL=new Map(),pos=new Int32Array(2*nb);
+  function addOut(node,hh,a){var l=outL.get(node);if(!l){l=[];outL.set(node,l)}l.push(hh);hang[hh]=a}
+  for(i=0;i<nb;i++){
+    var b=blist[i],p=b.p,n=p.length/2,u=b.ids[0],v=b.ids[b.ids.length-1];
+    hf[2*i]=u;ht[2*i]=v;hf[2*i+1]=v;ht[2*i+1]=u;
+    addOut(u,2*i,Math.atan2(p[3]-p[1],p[2]-p[0]));
+    addOut(v,2*i+1,Math.atan2(p[2*n-3]-p[2*n-1],p[2*n-4]-p[2*n-2]));
+  }
+  outL.forEach(function(l){l.sort(function(x,y){return hang[x]-hang[y]});l.forEach(function(hh,k){pos[hh]=k})});
+  function nextH(hh){var t=hh^1,l=outL.get(ht[hh]),k=pos[t];return l[(k-1+l.length)%l.length]}
+  var face=new Int32Array(2*nb).fill(-1),areas=[],cyc=[];
+  for(h=0;h<2*nb;h++){
+    if(face[h]>=0)continue;
+    var fid=areas.length,cur=h,verts=[],guard=0,area=0;
+    do{
+      face[cur]=fid;
+      var bb=blist[cur>>1],pp=bb.p,nn=pp.length/2,rv=cur&1;
+      for(q=0;q<nn;q++){var qi=rv?nn-1-q:q;verts.push(pp[2*qi],pp[2*qi+1])}
+      cur=nextH(cur);guard++;
+    }while(cur!==h&&guard<4*nb+8);
+    for(q=0;q<verts.length;q+=2){var q2=(q+2)%verts.length;area+=verts[q]*verts[q2+1]-verts[q2]*verts[q+1]}
+    areas.push(area/2);cyc.push(verts);
+  }
+  var outer=areas.map(function(a){return a<-1e-13});
+  var bnd=[],rings=[];
+  for(i=0;i<nb;i++){
+    var fo=face[2*i],fr=face[2*i+1];
+    if(outer[fo]===outer[fr])continue;                    /* interior, o rama suelta que no encierra nada */
+    bnd.push({blk:i,allowRev:outer[fo]?0:1});             /* se permite el sentido con la cara exterior a su izquierda */
+  }
+  areas.forEach(function(a,f){
+    if(!outer[f]||-a<1e-12)return;
+    var v=cyc[f],x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    for(var k=0;k<v.length;k+=2){if(v[k]<x0)x0=v[k];if(v[k]>x1)x1=v[k];if(v[k+1]<y0)y0=v[k+1];if(v[k+1]>y1)y1=v[k+1]}
+    rings.push({v:v,b:[x0,y0,x1,y1]});
+  });
+  /* si lo pintado son varias redes separadas, entre ellas hay que poder pasar: se usa también el contorno convexo de todo */
+  var uf=new Map();
+  function fnd(x){while(uf.get(x)!==x){uf.set(x,uf.get(uf.get(x)));x=uf.get(x)}return x}
+  blist.forEach(function(bk){
+    var u=bk.ids[0],v=bk.ids[bk.ids.length-1];
+    if(!uf.has(u))uf.set(u,u);if(!uf.has(v))uf.set(v,v);
+    var ru=fnd(u),rv=fnd(v);if(ru!==rv)uf.set(ru,rv);
+  });
+  var roots=new Set();uf.forEach(function(_,k){roots.add(fnd(k))});
+  if(roots.size>1){
+    var pts=[];
+    blist.forEach(function(bk){for(var k=0;k<bk.p.length;k+=2)pts.push([bk.p[k],bk.p[k+1]])});
+    pts.sort(function(a,b){return a[0]-b[0]||a[1]-b[1]});
+    var cr=function(o,a,b){return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0])},lo=[],up=[],k2;
+    for(k2=0;k2<pts.length;k2++){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],pts[k2])<=0)lo.pop();lo.push(pts[k2])}
+    for(k2=pts.length-1;k2>=0;k2--){while(up.length>=2&&cr(up[up.length-2],up[up.length-1],pts[k2])<=0)up.pop();up.push(pts[k2])}
+    lo.pop();up.pop();
+    var hull=lo.concat(up),hv=[],hx0=1e9,hy0=1e9,hx1=-1e9,hy1=-1e9;
+    hull.forEach(function(q){hv.push(q[0],q[1]);if(q[0]<hx0)hx0=q[0];if(q[0]>hx1)hx1=q[0];if(q[1]<hy0)hy0=q[1];if(q[1]>hy1)hy1=q[1]});
+    if(hv.length>=6)rings.push({v:hv,b:[hx0,hy0,hx1,hy1],hull:true});
+  }
+  /* índice de segmentos pintados para saber qué está cerca de una cuadra pintada */
+  var CS=C.CELL,grid=new Map();
+  blist.forEach(function(bk){
+    var p=bk.p;
+    for(var k=2;k<p.length;k+=2){
+      var ax=p[k-2],ay=p[k-1],bx=p[k],by=p[k+1],g0x=Math.floor((Math.min(ax,bx)-C.X0)/CS),g1x=Math.floor((Math.max(ax,bx)-C.X0)/CS),g0y=Math.floor((Math.min(ay,by)-C.Y0)/CS),g1y=Math.floor((Math.max(ay,by)-C.Y0)/CS);
+      for(var gx=g0x;gx<=g1x;gx++)for(var gy=g0y;gy<=g1y;gy++){var key=gx*8192+gy,l=grid.get(key);if(l)l.push(ax,ay,bx,by);else grid.set(key,[ax,ay,bx,by])}
+    }
+  });
+  var rW=18/(R*Math.cos(mlat(blist[0].my)*Math.PI/180));
+  function inside(x,y){
+    for(var r=0;r<rings.length;r++){
+      var bx=rings[r].b;if(x<bx[0]||x>bx[2]||y<bx[1]||y>bx[3])continue;
+      var v=rings[r].v,ins=false;
+      for(var a=0,c=v.length-2;a<v.length;c=a,a+=2){
+        var xi=v[a],yi=v[a+1],xj=v[c],yj=v[c+1];
+        if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)ins=!ins;
+      }
+      if(ins)return true;
+    }
+    return false;
+  }
+  function near(x,y){
+    var gx=Math.floor((x-C.X0)/CS),gy=Math.floor((y-C.Y0)/CS);
+    for(var ix=gx-1;ix<=gx+1;ix++)for(var iy=gy-1;iy<=gy+1;iy++){
+      var l=grid.get(ix*8192+iy);if(!l)continue;
+      for(var k=0;k<l.length;k+=4){
+        var ax=l[k],ay=l[k+1],dx=l[k+2]-ax,dy=l[k+3]-ay,l2=dx*dx+dy*dy,t=l2?Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/l2)):0;
+        if(Math.hypot(ax+t*dx-x,ay+t*dy-y)<=rW)return true;
+      }
+    }
+    return false;
+  }
+  return {bnd:bnd,rings:rings,inside:inside,near:near,faces:areas.length,components:roots.size};
+}
+async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty,lim){
   sty=sty||STYLES.corto;
   var N=C.n,X=C.nodeX,Y=C.nodeY,off=C.adjOff,to=C.adjTo,wt=C.adjW,i,j,k,a;
   /* subgrafo cercano a las cuadras: un estado por arco dirigido */
@@ -1415,6 +1567,8 @@ async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
   }
   /* arcos que llegan a un semáforo desde una calle de doble sentido: desde ahí no se dobla a la izquierda */
   if(TURN.on&&C.sigNode)for(a=0;a<A;a++)if(C.sigNode[aTo[a]]===1&&arcTwo(aCsr[a]))aGuard[a]=1;
+  /* límite del circuito: arcos prohibidos (calle del borde en el sentido contrario, calle fuera de la capa) */
+  var aBan=new Uint8Array(A),aOut=new Uint8Array(A),limStat={bnd:0,conf:[],outside:0,outUsed:0},forbRev=new Map();
   function leftBan(p,q){
     if(!aGuard[p]||aTo[q]===aFrom[p])return false;
     var d=aBrg[q]-aBrg[p];
@@ -1436,9 +1590,23 @@ async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
     var d=Math.abs(dd)*57.29578,base=d<=35?0:d<=100?sty.t1:d<=150?sty.t2:sty.t3;
     return (dd<0&&d>35)?base+sty.left:base;               /* a la izquierda cuesta más: cruza el tránsito contrario */
   }
-  function deadEnd(p){var h=aTo[p],o=cOff[h],c=cCnt[h],f=aFrom[p];for(var q=0;q<c;q++)if(aTo[o+q]!==f)return false;return true}
+  function deadEnd(p){var h=aTo[p],o=cOff[h],c=cCnt[h],f=aFrom[p];for(var q=0;q<c;q++)if(aTo[o+q]!==f&&!aBan[o+q]&&!aOut[o+q])return false;return true}
   function canFollow(p,q){return aTo[q]===aFrom[p]?deadEnd(p):!leftBan(p,q)}
   function aid(u,v){var o=cOff[u];if(o<0)return -1;for(var q=0;q<cCnt[u];q++)if(aTo[o+q]===v)return o+q;return -1}
+  if(lim){
+    lim.bnd.forEach(function(bd){
+      if(lim.relaxSet&&lim.relaxSet.has(bd.blk)){var rb=blist[bd.blk];limStat.conf.push((rb.n>=0?C.names[rb.n]:'Calle sin nombre')+' ('+Math.round(rb.len)+' m)');return}
+      var bk=blist[bd.blk],ids=bk.ids,rids=ids.slice().reverse(),allow=bd.allowRev?rids:ids,forb=bd.allowRev?ids:rids,ok=true,q;
+      for(q=0;q+1<allow.length;q++)if(aid(allow[q],allow[q+1])<0){ok=false;break}
+      if(!ok){limStat.conf.push((bk.n>=0?C.names[bk.n]:'Calle sin nombre')+' ('+Math.round(bk.len)+' m)');return}   /* sentido único contrario: no se puede respetar */
+      forbRev.set(bd.blk,bd.allowRev?0:1);                 /* esa cuadra no se recolecta en el sentido contrario (el tránsito sí puede pasar) */
+      limStat.bnd++;
+    });
+    for(a=0;a<A;a++){
+      var mx=(X[aFrom[a]]+X[aTo[a]])/2,my=(Y[aFrom[a]]+Y[aTo[a]])/2;
+      if(!lim.inside(mx,my)&&!lim.near(mx,my)){aOut[a]=1;limStat.outside++}
+    }
+  }
   function dijk(sa,sd){
     dist.fill(INF);par.fill(-1);hs=0;
     for(var q=0;q<sa.length;q++)if(sd[q]<dist[sa[q]]){dist[sa[q]]=sd[q];hpush(sd[q],sa[q])}
@@ -1447,11 +1615,13 @@ async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
       if(d>dist[p])continue;
       var h=aTo[p],c=cCnt[h];if(!c)continue;
       var o=cOff[h],f=aFrom[p],only=true,q2;
-      for(q2=0;q2<c;q2++)if(aTo[o+q2]!==f){only=false;break}
+      for(q2=0;q2<c;q2++)if(aTo[o+q2]!==f&&!aBan[o+q2]&&!aOut[o+q2]){only=false;break}
       for(q2=0;q2<c;q2++){
         var b=o+q2,nd;
+        if(aBan[b])continue;
         if(aTo[b]===f){if(!only)continue;nd=d+aLen[b]+sty.u}
         else{if(aGuard[p]&&leftBan(p,b))continue;nd=d+aLen[b]+pen(p,b)}
+        if(aOut[b])nd+=OUTPEN+3*aLen[b];            /* salir de la capa solo si no hay otra forma */
         if(nd<dist[b]){dist[b]=nd;par[b]=p;hpush(nd,b)}
       }
     }
@@ -1461,8 +1631,9 @@ async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
   blist.forEach(function(b,bi){
     for(var rev=0;rev<2;rev++){
       if(rev&&b.ow)continue;
+      if(forbRev.has(bi)&&forbRev.get(bi)===rev)continue;
       var ids=rev?b.ids.slice().reverse():b.ids,al=[],ok=true,len=0;
-      for(var q=0;q+1<ids.length;q++){var ar=aid(ids[q],ids[q+1]);if(ar<0){ok=false;break}al.push(ar);len+=aLen[ar]}
+      for(var q=0;q+1<ids.length;q++){var ar=aid(ids[q],ids[q+1]);if(ar<0||aBan[ar]){ok=false;break}al.push(ar);len+=aLen[ar]}
       if(ok)items.push({blk:bi,rev:rev,arcs:al,first:al[0],last:al[al.length-1],start:ids[0],end:ids[ids.length-1],len:len});
     }
   });
@@ -1513,7 +1684,7 @@ async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
   var startC=null,startArg=null,sInitA=null,sInitD=null;
   if(startCi>=0){
     var sn=C.corners[startCi].nodes,sset=new Set(sn);sInitA=[];sInitD=[];
-    sn.forEach(function(nd){var o=cOff[nd];if(o<0)return;for(var q=0;q<cCnt[nd];q++){sInitA.push(o+q);sInitD.push(aLen[o+q])}});
+    sn.forEach(function(nd){var o=cOff[nd];if(o<0)return;for(var q=0;q<cCnt[nd];q++){if(aBan[o+q])continue;sInitA.push(o+q);sInitD.push(aLen[o+q])}});
     dijk(sInitA,sInitD);
     startC=new Float32Array(n).fill(INF);startArg=new Int32Array(n).fill(-1);
     for(j=0;j<n;j++){
@@ -1535,7 +1706,7 @@ async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
     }
     if(!ok&&nbl>1)unreach.push(bi);
   });
-  if(unreach.length)return {ok:false,why:'unreach',unreach:unreach.map(function(bi){var b=blist[bi];return (b.n>=0?C.names[b.n]:'Calle sin nombre')+' ('+Math.round(b.len)+' m)'})};
+  if(unreach.length)return {ok:false,why:'unreach',unreachIdx:unreach,unreach:unreach.map(function(bi){var b=blist[bi];return (b.n>=0?C.names[b.n]:'Calle sin nombre')+' ('+Math.round(b.len)+' m)'})};
   /* orden obligatorio entre grupos de cuadras: si desde un grupo no se puede volver a otro (sentidos únicos, giros
      prohibidos), el otro tiene que hacerse antes. Se calculan las componentes fuertemente conexas entre cuadras. */
   var bIds=Array.from(byBlk.keys()),bpos=new Map(),nb=bIds.length;
@@ -1570,7 +1741,7 @@ async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
       var sizes=new Int32Array(nComp);for(i=0;i<nb;i++)sizes[comp[i]]++;
       var main=0;for(i=1;i<nComp;i++)if(sizes[i]>sizes[main])main=i;
       var odd=[];bIds.forEach(function(b,q){if(comp[q]!==main)odd.push(b)});
-      return {ok:false,why:'unreach',unreach:odd.slice(0,8).map(function(bi){var b=blist[bi];return (b.n>=0?C.names[b.n]:'Calle sin nombre')+' ('+Math.round(b.len)+' m)'})};
+      return {ok:false,why:'unreach',unreachIdx:odd,unreach:odd.slice(0,8).map(function(bi){var b=blist[bi];return (b.n>=0?C.names[b.n]:'Calle sin nombre')+' ('+Math.round(b.len)+' m)'})};
     }
     var cRank=new Int32Array(nComp);order.forEach(function(c,q){cRank[c]=q});
     bIds.forEach(function(b,q){rank[b]=cRank[comp[q]];remRank[rank[b]]++});
@@ -1761,16 +1932,29 @@ async function planAttempt(blist,startCi,secs,task,margin,f0,f1,sty){
   var streetsN=pieces.size,streets1=0,piecesSum=0;
   pieces.forEach(function(v){piecesSum+=v;if(v===1)streets1++});
   var metrics={turns:nTurn,lefts:nLeft,medRun:runs[runs.length>>1],shortRuns:runs.filter(function(x){return x<=120}).length,streets:streetsN,streets1:streets1,piecesAvg:streetsN?piecesSum/streetsN:0};
-  return {ok:true,stops:stops,style:sty.n,mx:metrics,stats:{servM:servM,transM:transM,repM:repM,uturns:uturns,sharp:sharp,bans:bans,waypoints:nWay,passBy:passBy,uncovered:uncovered,blocks:nbl,skipped:skipped,items:n,iters:iters,greedyC:greedyC,finalC:bestC}};
+  if(lim){var ou=0;route.forEach(function(r){if(aOut[r.a])ou+=aLen[r.a]});limStat.outUsed=ou}
+  return {ok:true,stops:stops,style:sty.n,mx:metrics,limInfo:lim?limStat:null,stats:{servM:servM,transM:transM,repM:repM,uturns:uturns,sharp:sharp,bans:bans,waypoints:nWay,passBy:passBy,uncovered:uncovered,blocks:nbl,skipped:skipped,items:n,iters:iters,greedyC:greedyC,finalC:bestC}};
 }
-async function planBest(blist,secs,task,sty,f0,f1){
-  var res=null,fail=null,margins=[450,1600];
+async function planBest(blist,secs,task,sty,f0,f1,lim){
+  var res=null,fail=null,margins=[450,1600],tries=0;
   for(var mi=0;mi<margins.length&&!res;mi++){
-    if(mi)prog('Reintentando con un área más grande…',f0);
-    var r=await planAttempt(blist,P.start,secs,task,margins[mi],f0,f1,sty);
-    if(r.cancel)return {cancel:true};
-    if(r.ok)res=r;else fail=r;
-    if(fail&&!r.ok&&r.why!=='unreach')break;
+    for(;;){
+      if(mi||tries)prog('Reintentando…',f0);
+      var r=await planAttempt(blist,P.start,secs,task,margins[mi],f0,f1,sty,lim);
+      if(r.cancel)return {cancel:true};
+      if(r.ok){res=r;break}
+      fail=r;
+      /* una calle del borde que no se puede recolectar en el sentido pedido (por los sentidos de las calles) se libera sola */
+      if(lim&&r.why==='unreach'&&r.unreachIdx&&tries<12){
+        var bset=new Set(lim.bnd.map(function(x){return x.blk})),added=0;
+        lim.relaxSet=lim.relaxSet||new Set();
+        r.unreachIdx.forEach(function(bi){if(bset.has(bi)&&!lim.relaxSet.has(bi)){lim.relaxSet.add(bi);added++}});
+        tries++;
+        if(added)continue;
+      }
+      break;
+    }
+    if(!res&&fail&&fail.why!=='unreach')break;
   }
   return {res:res,fail:fail};
 }
@@ -1791,18 +1975,26 @@ async function runPlan(){
   try{
     var blist=[];P.set.forEach(function(bi){blist.push(P.blocks[bi])});
     /* se prueban varias variantes (de más corta a más prolija) y se queda la de mejor puntaje */
-    var keys=['corto','equilibrado','prolijo','muyprolijo'],cand=[],nb=blist.length;
+    var keys=['corto','equilibrado','prolijo','muyprolijo'],cand=[],nb=blist.length,relaxed=false;
+    var lim=($('o-limit').checked&&S.opts.limit!==false)?boundaryInfo(blist):null;
+    if(lim&&!lim.bnd.length&&!lim.rings.length)lim=null;
     var total=Math.max(60,Math.min(240,20+nb)),per=total/(keys.length+0.5);   /* no importa que demore: más tiempo, mejor recorrido */
     for(var k=0;k<keys.length;k++){
       P.tag='Variante '+(k+1)+' de '+keys.length;
-      var cb=await planBest(blist,k===0?per*0.5:per,task,STYLES[keys[k]],k/keys.length,(k+1)/keys.length);
+      var cb=await planBest(blist,k===0?per*0.5:per,task,STYLES[keys[k]],k/keys.length,(k+1)/keys.length,lim);
       if(cb.cancel){$('p-res').textContent='Cálculo cancelado.';say('Cálculo cancelado.');return}
+      if(!cb.res&&lim){                          /* no hay forma de respetar el límite: se arma sin esa regla y se avisa */
+        relaxed=planFailMsg(cb.fail);lim=null;
+        cb=await planBest(blist,k===0?per*0.5:per,task,STYLES[keys[k]],k/keys.length,(k+1)/keys.length,null);
+        if(cb.cancel){$('p-res').textContent='Cálculo cancelado.';say('Cálculo cancelado.');return}
+      }
       if(!cb.res){var cm=planFailMsg(cb.fail);$('p-res').textContent=cm;say(cm,true);return}
       cb.res.score=planScore(cb.res);cand.push(cb.res);
     }
     var best=cand[0];cand.forEach(function(c){if(c.score<best.score)best=c});
     window.__cand=cand.map(function(c){return {estilo:c.style,transKm:+(c.stats.transM/1000).toFixed(2),giros:c.mx.turns,izq:c.mx.lefts,piezas:+c.mx.piecesAvg.toFixed(2),calles:c.mx.streets,score:Math.round(c.score)}});
     best.ref=cand[0];                       /* la variante más corta, de referencia */
+    best.relaxed=relaxed;
     applyPlan(best);
   }catch(err){
     var m2='Algo falló al calcular el recorrido: '+(err&&err.message||err);$('p-res').textContent=m2;say(m2,true);window.__planErr=String(err&&err.stack||err);
@@ -1826,6 +2018,14 @@ function applyPlan(res){
   var nT=list.filter(function(t){return t.k==='T'}).length,nR=list.length-nT,broken=M.broken?Object.keys(M.broken).length:0;
   var mx=res.mx,txt='Recorrido armado: '+kmTxt(st.servM)+' de recolección y '+kmTxt(st.transM)+' de tránsito'+(st.repM>50?' ('+kmTxt(st.repM)+' se recorren más de una vez)':'')+'. '+nR+' paradas de recolección y '+nT+' de tránsito'+(st.skipped?'. '+st.skipped+(st.skipped===1?' cuadra no se pudo ubicar en la red':' cuadras no se pudieron ubicar en la red'):'')+(replaced?'. Reemplazó las '+replaced+' paradas anteriores (Deshacer las recupera)':'')+'.';
   if(mx)txt+=' '+mx.turns+' giros ('+mx.lefts+' a la izquierda), tramo recto típico de '+Math.round(mx.medRun)+' m, '+mx.streets1+' de '+mx.streets+' calles recolectadas de corrido.';
+  var li=res.limInfo;
+  if(li){
+    txt+=' Límite del circuito: '+li.bnd+(li.bnd===1?' calle del borde recolectada':' calles del borde recolectadas')+' con el interior a la derecha.';
+    if(li.outUsed>5)txt+=' Ojo: '+Math.round(li.outUsed)+' m del recorrido salen de la capa porque no hay otra forma de volver (calles de un solo sentido).';
+    else txt+=' El tránsito no sale de la capa.';
+    if(li.conf.length)txt+=' Ojo: '+li.conf.length+(li.conf.length===1?' calle del borde no se pudo recolectar':' calles del borde no se pudieron recolectar')+' con el interior a la derecha por los sentidos de las calles: '+li.conf.slice(0,4).join('; ')+(li.conf.length>4?'…':'')+'.';
+  }
+  if(res.relaxed)txt+=' Ojo: no hubo forma de respetar el límite del circuito con los sentidos de las calles, así que se armó sin esa regla. Motivo: '+res.relaxed;
   if(res.ref&&res.ref!==res){
     var dT=(st.transM-res.ref.stats.transM),dL=res.ref.mx.lefts-mx.lefts,dP=Math.round((res.ref.mx.piecesAvg-mx.piecesAvg)*mx.streets);
     txt+=' Frente a la variante más corta: '+kmTxt(Math.abs(dT))+(dT>=0?' más':' menos')+' de tránsito'+(dL>0?', '+dL+' giros a la izquierda menos':'')+(dP>0?' y '+dP+' cortes de calle menos':'')+'.';
@@ -1843,6 +2043,7 @@ function bindPaint(){
   $('m-paint').addEventListener('click',function(){if(!P.on)setMode(true)});
   $('tb-paint').addEventListener('click',function(e){var b=e.target.closest('button[data-tool]');if(b)setTool(b.dataset.tool)});
   bindTurns();
+  $('o-limit').addEventListener('change',function(){S.opts.limit=this.checked;save();P.limKey='';scheduleDraw();say(this.checked?'Se respeta el límite del circuito: las calles del borde van con el interior a la derecha y el tránsito no sale de la capa.':'El límite del circuito no se controla.')});
   $('p-start').addEventListener('click',function(){P.pick=!P.pick;renderPaint();say(P.pick?'Hacé clic en la esquina de salida en el mapa.':'Elección cancelada.')});
   $('p-start-x').addEventListener('click',function(){P.start=-1;P.pick=false;savePaint();renderPaint();scheduleDraw()});
   $('p-go').addEventListener('click',function(){
@@ -2234,12 +2435,12 @@ function bindSim(){
 /* ================= arranque ================= */
 load();
 $('o-time').value=S.opts.time;$('o-type').value=S.opts.type;$('o-ttype').value=S.opts.ttype||'TRANSITO';$('o-name').value=S.opts.name;
-$('o-snap').checked=!!S.opts.snap;$('o-auto').checked=!!S.opts.auto;TURN.on=S.opts.turns!==false;$('o-turn').checked=TURN.on;$('o-shape').checked=S.opts.shape!==false;
-bindMap();bindPanel();bindPaint();bindSim();
+$('o-snap').checked=!!S.opts.snap;$('o-auto').checked=!!S.opts.auto;TURN.on=S.opts.turns!==false;$('o-turn').checked=TURN.on;$('o-shape').checked=S.opts.shape!==false;$('o-limit').checked=S.opts.limit!==false;
+bindNight();bindMap();bindPanel();bindPaint();bindSim();
 loadCity();loadPaint();renderPaint();
 S.stops.forEach(relink);
 rebuildRoute();renderList();renderSummary();updateHint();updateMapHint();
-measure();fitView();scheduleDraw();
+measure();fitView();scheduleDraw();setMode(true);
 say('Pintá las cuadras que faltan, o trazá el recorrido esquina por esquina. Un clic agrega una parada, también sobre una esquina que ya usaste.');
 try{
   if(window.claude&&window.claude.use){window.claude.use('downloads').then(function(d){if(d){downloads=d;$('dl').hidden=false}},function(){})}
