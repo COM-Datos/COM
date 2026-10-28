@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>COM</title>
+<link rel="icon" type="image/png" href="../assets/logo-ciemsa.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F7F6F3; --card:#FFFFFF; --border:#E6E2DA; --border2:#D6D1C8;
+  --text:#1A1714; --text2:#5F5A54; --text3:#9A948C; --grid:#EEEBE5;
+  --teal:#39745E; --teal-bg:#DCEDE4;
+  --pend:#eb6834; --pend-bg:#FCE9DF;
+  --atr:#d03b3b;  --atr-bg:#F9E1E0;
+  --asig:#2a78d6; --asig-bg:#E1ECFA;
+  --hecho:#1baf7a;--hecho-bg:#DDF3EA;
+  --gris:#B5AFA6;
+  --shadow:0 4px 20px rgba(26,23,20,.05),0 1px 3px rgba(26,23,20,.05);
+  --r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(circle at 12% 0%,#EDEEF9 0%,transparent 40%),radial-gradient(circle at 95% 100%,#E7F3EE 0%,transparent 40%),var(--bg);
+  background-attachment:fixed;min-height:100vh}
+.wrap{max-width:1440px;margin:0 auto;padding:1.5rem clamp(16px,2.5vw,2rem) 3rem}
+button{font:inherit;color:inherit;cursor:pointer}
+.num{font-variant-numeric:tabular-nums}
+
+/* Barra del título: igual a la de los dashboards de COM-Datos/Dashboard */
+.barra{background:linear-gradient(135deg,#0f172a 0%,#16213e 55%,#1b3f74 100%);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+/* Mismo ancho y márgenes que .wrap, para que los botones queden alineados con el contenido.
+   Tres columnas iguales a los lados para que el título quede centrado de verdad. */
+.barra-in{max-width:1440px;margin:0 auto;min-height:84px;padding:12px clamp(16px,2.5vw,2rem);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}
+.barra-in .back{justify-self:start}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 8px;border-radius:7px;text-decoration:none;color:#c7d5ea;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;white-space:nowrap;transition:color .15s,background-color .15s}
+.back:hover{color:#fff;background:rgba(255,255,255,.08)}
+.back svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.titulo{display:flex;align-items:center;gap:10px;min-width:0}
+/* ♻ en versión emoji a color, igual que en COM-Datos/Dashboard/bolsones.html */
+.titulo .ico{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;font-size:26px;font-weight:700;line-height:32px;color:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
+.titulo h1{font-family:'Segoe UI',Arial,sans-serif;font-size:27px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+/* Botón y texto al tamaño del enlace "Volver" de la izquierda */
+.act{justify-self:end;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.actualizado{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:10px;color:#c7d5ea;white-space:nowrap;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:7px;padding:5px 10px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:600;transition:background-color .15s}
+.btn:hover{background:rgba(255,255,255,.2)}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn.cargando svg{animation:gira .9s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+
+/* Botoneras segmentadas (capas del mapa) */
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:3px;box-shadow:var(--shadow)}
+.seg button{border:0;background:transparent;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap}
+.seg button.on{background:var(--text);color:#fff}
+.seg input[type=date]{border:0;background:transparent;font:inherit;font-size:13px;color:var(--text2);padding:0 8px;outline:none}
+.seg input.on{color:var(--text);font-weight:600}
+
+/* Semana */
+.semana{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
+/* Tarjetas de la semana (solo informativas): municipios con su planta y vaciados fijos del día */
+.dia{display:flex;flex-direction:column;min-width:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:.75rem .75rem .8rem;box-shadow:var(--shadow)}
+.dia.hoy{border-color:var(--teal);background:linear-gradient(180deg,#F1F8F4 0%,var(--card) 70%);box-shadow:0 0 0 3px var(--teal-bg),var(--shadow)}
+.dia-n{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.1px;padding-bottom:.55rem;margin-bottom:.6rem;border-bottom:1px solid #F0EDE7}
+.dia.hoy .dia-n{color:var(--teal);border-bottom-color:#D5E8DD}
+.dia-sec{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.45rem}
+.dia-sec.sig{margin-top:.8rem;padding-top:.7rem;border-top:1px solid #F0EDE7}
+.dia.hoy .dia-sec.sig{border-top-color:#D5E8DD}
+.dia-fijos{display:flex;flex-direction:column;gap:6px}
+.dia-hoy{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;background:var(--teal);border-radius:99px;padding:1px 8px 3px}
+/* Un renglón por municipio: etiqueta "Municipio X" → planta donde descarga */
+.dia-rows{display:grid;grid-template-columns:auto auto minmax(0,1fr);grid-auto-rows:22px;align-items:center;gap:7px 6px}
+.dia-rows .mb{font-size:11.5px;padding:0 12px 0 8px;min-width:100px} /* mismo ancho en todas: las plantas arrancan en la misma vertical */
+/* Subtítulo "Municipios → Descarga" en una línea, con la misma flecha que los renglones */
+.dia-sec-cols{display:flex;align-items:center;gap:6px}
+.dia-fl{width:13px;height:13px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dia-p{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fv{display:flex;align-items:center;justify-content:space-between;gap:6px;background:#FAF9F6;border:1px solid #EFECE6;border-left:4px solid var(--c,var(--gris));border-radius:9px;padding:.4rem .45rem .4rem .55rem}
+.fv-n{font-size:12px;font-weight:700;line-height:1.3;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fv .mb{flex:none;order:2;height:20px;min-width:22px;padding:0 8px 0 4px;font-size:11px}
+.dia-vacio{font-size:12px;color:var(--text3);padding:.2rem .15rem}
+.mb{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 10px 0 6px;border-radius:7px;border-left:4px solid transparent;background:#F0EDE7;color:var(--text);font-size:12px;font-weight:700}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.kpi{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:.9rem 1rem;box-shadow:var(--shadow);position:relative;overflow:hidden;cursor:default}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,var(--border2))}
+.kpi-l{font-size:12px;font-weight:600;color:var(--text2)}
+.kpi-v{font-size:30px;font-weight:700;letter-spacing:-1px;line-height:1.15;margin-top:.2rem}
+
+/* Mapa + panel */
+.principal{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+.mapa-card{position:relative;overflow:hidden;isolation:isolate;height:640px;display:flex;flex-direction:column}
+.mapa-bar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:.7rem .8rem;border-bottom:1px solid var(--border)}
+.capas button{font-size:12.5px;padding:5px 11px}
+.toggles{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.tg{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--card);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--text2)}
+.tg i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.tg.off{opacity:.42}
+.tg.off i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+.ruta-sel{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.ruta-sel select,.ruta-sel input{font:inherit;font-size:12.5px;border:1px solid var(--border);border-radius:9px;padding:5px 8px;background:var(--card);color:var(--text);max-width:220px}
+#mapa,#mapaOp{flex:1;background:#EFEDE8}
+.mapa-op{height:600px;margin-bottom:14px}
+.mapa-op .toggles{margin-left:0}
+.leaflet-container{font:inherit}
+.leaflet-tooltip{border-radius:8px;border:1px solid var(--border);box-shadow:var(--shadow);font-size:12px;color:var(--text);padding:4px 8px}
+.ficha{position:absolute;left:12px;bottom:12px;z-index:900;width:min(340px,calc(100% - 24px));background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 32px rgba(26,23,20,.16);padding:.9rem 1rem;display:none}
+.ficha.on{display:block}
+.ficha-x{position:absolute;top:8px;right:10px;border:0;background:none;font-size:18px;color:var(--text3);line-height:1}
+.ficha h3{font-size:15px;font-weight:700;padding-right:18px;line-height:1.25}
+.ficha .sub{font-size:12px;color:var(--text2);margin-top:2px}
+.ficha .sub .mb{height:19px;min-width:22px;font-size:11px;vertical-align:1px;margin-left:2px}
+.ficha hr{border:0;border-top:1px solid var(--border);margin:.6rem 0}
+.ficha dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px}
+.ficha dt{color:var(--text3)}
+.ficha dd{color:var(--text);min-width:0;overflow-wrap:anywhere}
+.est{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px;background:var(--bg-c);color:var(--c)}
+.est::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.ruta-res{position:absolute;right:12px;top:66px;z-index:900;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:.6rem .8rem;font-size:12px;display:none}
+.ruta-res.on{display:grid;grid-template-columns:auto auto;gap:2px 12px}
+.ruta-res b{font-weight:700;text-align:right}
+.ruta-res span{color:var(--text2)}
+.num-ico{background:var(--asig);color:#fff;border:2px solid #fff;border-radius:50%;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+
+.panel{height:640px;display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;gap:2px;overflow-x:auto;padding:.55rem .55rem 0;border-bottom:1px solid var(--border);scrollbar-width:none}
+.tabs button{display:inline-flex;align-items:center;border:0;background:none;padding:.55rem .6rem;font-size:12.5px;font-weight:600;color:var(--text3);border-top:2px solid transparent;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--text);border-bottom-color:var(--text)}
+.tabs .n{display:inline-flex;align-items:center;font-size:11px;background:#F0EDE7;color:var(--text2);border-radius:99px;padding:1px 6px;margin-left:3px}
+.panel-h{padding:.6rem .9rem;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:.5rem}
+.lista{flex:1;overflow-y:auto;list-style:none}
+.it{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:start;padding:.6rem .9rem;border-bottom:1px solid #F2EFEA;cursor:pointer}
+.it:hover{background:#FAF9F6}
+.it.sel{background:#F3F7F5}
+.it .mb{grid-row:span 2;margin-top:1px}
+.it-d{font-size:13px;font-weight:600;line-height:1.3;min-width:0}
+.it-s{font-size:11.5px;color:var(--text2);grid-column:2/4;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.it-r{font-size:11.5px;color:var(--text3);white-space:nowrap;text-align:right}
+.grupo{position:sticky;top:0;background:#F7F6F3;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;padding:.45rem .9rem;border-bottom:1px solid var(--border);z-index:1}
+.vacio{padding:2rem 1rem;text-align:center;color:var(--text3);font-size:13px}
+
+/* Pestaña Atrasados */
+.atr-card{padding:1.1rem 1.2rem 1.2rem;margin-bottom:14px}
+/* Matriz municipio × antigüedad como mapa de calor */
+.hm-wrap{overflow-x:auto;overflow-y:hidden} /* barra solo si de verdad no entra (celular) */
+.hm{display:grid;grid-template-columns:max-content repeat(8,minmax(46px,1fr));gap:6px;align-items:center;min-width:520px}
+.hm-h{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;text-align:center}
+.hm-h.izq{text-align:left}
+.hm-l{display:flex;align-items:center;padding-right:8px;font-size:13px;font-weight:600;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.hc{height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;background:#F5F3EF;color:var(--text)}
+.hc.cero{color:transparent}
+/* Detalle: una tarjeta por dirección atrasada */
+.at-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+.at-it{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;background:#FAF9F6;border:1px solid #EFECE6;border-left:5px solid var(--m);border-radius:12px;padding:.85rem 1rem}
+.at-dir{font-size:15px;font-weight:700;letter-spacing:-.2px;line-height:1.25}
+.at-sub{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--text2)}
+.at-sub span{display:inline-flex;align-items:center;gap:4px}
+.at-sub svg{width:13px;height:13px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.at-vacio{text-align:center;color:var(--text2);font-size:14px;font-weight:600;padding:1.4rem 1rem}
+.at-desc{grid-column:1/-1;font-size:12.5px;color:var(--text);background:var(--card);border:1px solid #EFECE6;border-radius:9px;padding:.5rem .65rem;line-height:1.4}
+@media (max-width:760px){.at-lista{grid-template-columns:1fr}}
+
+/* Gráficas */
+/* Barra de categorías (mismo azul que la barra del título) */
+.cats{position:sticky;top:10px;z-index:1100;display:flex;gap:6px;padding:6px;margin-bottom:14px;border-radius:14px;background:linear-gradient(135deg,#0f172a 0%,#16213e 55%,#1b3f74 100%);box-shadow:0 4px 12px rgba(15,23,42,.25);overflow-x:auto;scrollbar-width:none}
+.cats button{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:#c7d5ea;font-size:13.5px;font-weight:600;padding:9px 16px;border-radius:10px;white-space:nowrap;transition:background-color .15s,color .15s}
+.cats button:hover{background:rgba(255,255,255,.08);color:#fff}
+.cats button.on{background:#fff;color:#0f172a;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.cats svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cat{display:none}
+.cat.on{display:block}
+.graficas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.g{padding:1rem 1.1rem 1.1rem;min-width:0}
+.g.ancha{grid-column:1/-1}
+.g-h{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:.7rem;flex-wrap:wrap}
+.g-t{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.g-k{display:flex;gap:12px;font-size:12px;color:var(--text2);flex-wrap:wrap}
+.g-k span{display:inline-flex;align-items:center;gap:5px}
+.g-k i{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.g-c{position:relative;height:280px}
+.g-vacio{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px}
+
+/* Mapa de calor hora x día */
+.calor{display:grid;grid-template-columns:42px repeat(15,1fr);gap:3px;font-size:11px;color:var(--text3)}
+.calor .c{aspect-ratio:1.5;border-radius:4px;background:#F2F0EC;min-height:18px}
+.calor .ly{display:flex;align-items:center;font-weight:600}
+.calor .lx{text-align:center}
+
+.cargador{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:5000;font-size:14px;color:var(--text2)}
+
+/* 6 días por fila solo cuando entran los nombres de las plantas en un renglón */
+@media (max-width:1439px){
+  .semana{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:1200px){
+  .principal{grid-template-columns:1fr}
+  .panel{height:520px}
+  .kpis{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:760px){
+  .seg{max-width:100%;overflow-x:auto;scrollbar-width:none}
+  .semana{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dia,.principal>*{min-width:0}
+  .kpi-v{font-size:26px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .graficas{grid-template-columns:1fr}
+  .mapa-card{height:540px}
+  .barra-in{grid-template-columns:1fr auto;padding:10px 16px;gap:8px}
+  .barra-in .back{grid-column:1/-1}
+  .titulo{justify-self:start}
+  .titulo h1{font-size:21px}
+  .titulo .ico{width:26px;height:26px;font-size:21px;line-height:26px}
+  .toggles,.ruta-sel{margin-left:0}
+  .calor{grid-template-columns:34px repeat(15,1fr);gap:2px;font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="cargador" id="cargador">Cargando datos…</div>
+<header class="barra">
+  <div class="barra-in">
+    <a class="back" href="../index.html" aria-label="Volver al menú principal">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Volver al menú principal
+    </a>
+    <div class="titulo">
+      <span class="ico" aria-hidden="true">♻</span>
+      <h1>Supervisión de Bolsones</h1>
+    </div>
+    <div class="act">
+      <button class="btn" id="actualizar">
+        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Actualizar
+      </button>
+      <span class="actualizado" id="actualizado"></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- Categorías: cada botón muestra uno de los bloques .cat de abajo -->
+  <nav class="cats" id="cats">
+    <button data-cat="organizacion" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Organización del servicio</button>
+    <button data-cat="resumen"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Resumen</button>
+    <button data-cat="pendientes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Pendientes</button>
+    <button data-cat="atrasados"><svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5"/><path d="M12 17.5v.01"/></svg>Atrasados</button>
+    <button data-cat="operacion"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>Operación del día</button>
+  </nav>
+
+  <!-- Datos fijos del servicio: municipios y planta de cada día, vaciados fijos -->
+  <div class="cat on" data-cat="organizacion">
+  <section class="semana" id="semana"></section>
+  </div>
+
+  <div class="cat" data-cat="resumen">
+  <section class="kpis" id="kpis"></section>
+
+  <section class="principal">
+    <div class="card mapa-card">
+      <div class="mapa-bar">
+        <div class="seg capas" id="capas">
+          <button data-c="pendientes" class="on">Pendientes</button>
+          <button data-c="realizados">Realizados</button>
+          <button data-c="calor">Calor</button>
+          <button data-c="recorridos">Recorridos</button>
+        </div>
+        <div class="toggles" id="toggles"></div>
+        <div class="ruta-sel" id="rutaSel" hidden>
+          <input type="date" id="rutaDia">
+          <select id="rutaTransp"></select>
+        </div>
+      </div>
+      <div id="mapa"></div>
+      <div class="ruta-res" id="rutaRes"></div>
+      <div class="ficha" id="ficha"></div>
+    </div>
+
+    <aside class="card panel">
+      <nav class="tabs" id="tabs"></nav>
+      <div class="panel-h" id="panelH"></div>
+      <ul class="lista" id="lista"></ul>
+    </aside>
+  </section>
+  </div>
+
+  <div class="cat" data-cat="pendientes">
+  <section class="graficas">
+    <div class="card g">
+      <div class="g-h"><div class="g-t">Vaciados pendientes por antigüedad</div><div class="g-k" id="kAtraso"></div></div>
+      <div class="g-c"><canvas id="cAtraso"></canvas></div>
+    </div>
+    <div class="card g">
+      <div class="g-h"><div class="g-t">Días hasta la gestión</div><div class="g-k" style="color:var(--text3)">mediana · hoy</div></div>
+      <div class="g-c"><canvas id="cRespuesta"></canvas></div>
+    </div>
+    <div class="card g ancha">
+      <div class="g-h"><div class="g-t">Ingresos y gestiones por día</div>
+        <div class="g-k"><span><i style="--c:var(--asig)"></i>Solicitudes ingresadas</span><span><i style="--c:var(--hecho)"></i>Solicitudes gestionadas</span></div></div>
+      <div class="g-c"><canvas id="cDiario"></canvas></div>
+    </div>
+  </section>
+  </div>
+
+  <!-- Réplica de la hoja "Atrasados": vaciados pendientes por antigüedad y municipio, y el detalle -->
+  <div class="cat" data-cat="atrasados">
+  <section class="card atr-card">
+    <div class="hm-wrap"><div class="hm" id="hmAtraso"></div></div>
+  </section>
+  <section class="card atr-card">
+    <div id="atLista"></div>
+  </section>
+  </div>
+
+  <div class="cat" data-cat="operacion">
+  <div class="card mapa-card mapa-op">
+    <div class="mapa-bar"><div class="toggles" id="opToggles"></div></div>
+    <div id="mapaOp"></div>
+    <div class="ficha" id="fichaOp"></div>
+  </div>
+  <section class="graficas">
+    <div class="card g">
+      <div class="g-h"><div class="g-t">Gestiones por transportista</div></div>
+      <div class="g-c" id="wTransp"><canvas id="cTransp"></canvas></div>
+    </div>
+    <div class="card g">
+      <div class="g-h"><div class="g-t">Bolsones descargados por planta</div></div>
+      <div class="g-c"><canvas id="cPlanta"></canvas></div>
+    </div>
+    <div class="card g">
+      <div class="g-h"><div class="g-t">Ingresos por tipo de edificio</div></div>
+      <div class="g-c"><canvas id="cEdif"></canvas></div>
+    </div>
+    <div class="card g">
+      <div class="g-h"><div class="g-t">Bolsones gestionados por tipo</div></div>
+      <div class="g-c"><canvas id="cTipo"></canvas></div>
+    </div>
+    <div class="card g ancha">
+      <div class="g-h"><div class="g-t">¿Cuándo se gestiona?</div><div class="g-k" style="color:var(--text3)">gestiones por día de la semana y hora</div></div>
+      <div class="calor" id="calor"></div>
+    </div>
+  </section>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Fuente de datos. Hoy es una copia sin datos personales generada con
+// dashboard-bolsones/build_datos.py. Más adelante se cambia por el webhook de
+// n8n (vía ngrok), que tiene que devolver el mismo formato JSON.
+const CONFIG = {
+  fuente: 'datos/bolsones.json',
+};
+const CARTO_KEY = 'cb1_4dpf_1_b2ca9299be611862d5d23c88';
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MUNIS = ['A', 'B', 'C', 'CH', 'D', 'E', 'F', 'G'];
+
+// Vaciados fijos por día (planilla aparte, cargada a mano). Índice 0 = lunes.
+// Si cambian, editar esta lista. Color = el del municipio en esa planilla.
+// Van dentro de la tarjeta de cada día; se ve solo el nombre y el detalle (d) aparece al pasar el mouse.
+const VACIADOS_FIJOS = [
+  [
+    { n: 'Cooperativa Mesa 1', mun: 'F' },
+    { n: 'Plaza Alba Roballo', d: ['14:00 a 21:00'], mun: 'F' },
+    { n: 'Torre de los Caudillos', d: ['Retiro por Enrique Rodó 2395 bis', '10:00 a 12:00'], mun: 'CH' },
+  ],
+  [
+    { n: 'PTI Cerro', d: ['Edificio Verde 217 - Solytex', '10:30 a 15:00', 'Descargar en Durán'], mun: 'A' },
+    { n: 'Viviendas BPS', d: ['Bv. José Batlle y Ordóñez 6320', '8:00'], mun: 'G' },
+  ],
+  [
+    { n: 'Cooperativa Mesa 1', mun: 'F' },
+  ],
+  [
+    { n: 'Recorrido La Teja', d: ['Primer jueves del mes: de mañana', 'Tercer jueves del mes: de tarde'], mun: 'A' },
+  ],
+  [
+    { n: 'Cooperativa Mesa 1', mun: 'F' },
+    { n: 'Torre de los Caudillos', d: ['Retiro por Enrique Rodó 2395 bis', '10:00 a 12:00'], mun: 'CH' },
+  ],
+  [],
+];
+// Color de cada municipio: el mismo del formato condicional de la hoja Indicadores
+// de SUPERVISION BOLSONES. Se usa en todas las etiquetas de municipio de la página.
+const COLOR_MUNI = { A: '#C2A289', B: '#FFE599', C: '#B6D7A8', CH: '#6D9EEB', D: '#F9CB9C', E: '#93C47D', F: '#B4A7D6', G: '#A64D79' };
+// Etiqueta de municipio: fondo neutro con la marca de color a la izquierda (como los vaciados fijos)
+const chipMuni = (m, largo) => `<span class="mb" style="border-left-color:${COLOR_MUNI[m] || 'var(--gris)'}">${largo ? 'Municipio ' : ''}${esc(m)}</span>`;
+// Día de servicio de cada municipio (ISO: 1 = lunes). CH va viernes y sábado;
+// la planilla toma el sábado para calcular el atraso, se replica igual.
+const DIA_SERVICIO = { B: 1, F: 1, A: 2, G: 2, E: 3, C: 4, D: 4, CH: 6 };
+const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const ATRASO = [
+  { n: 'Sin atraso', c: '#F2C29C' },
+  { n: '1 semana', c: '#E98A4F' },
+  { n: '2 semanas', c: '#D45E26' },
+  { n: '3 semanas', c: '#A8431A' },
+  { n: '4 semanas o más', c: '#6E2A0F' },
+];
+const COL = { pend: '#eb6834', atr: '#d03b3b', asig: '#2a78d6', hecho: '#1baf7a', gris: '#B5AFA6' };
+const RE_ENTREGA = /entrega|cambio/i;
+
+const st = {
+  periodo: 'hoy', dia: null, munis: new Set(), q: '',
+  capa: 'pendientes', tab: 'hoy', sel: null,
+  ver: { nuevo: true, atrasado: true, asignado: true },
+  rutaDia: null, rutaTransp: '',
+};
+let D, HOY, HOYk;
+
+// ── utilidades ──────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = n => (n ?? 0).toLocaleString('es-UY', { maximumFractionDigits: 1 });
+const pad = n => String(n).padStart(2, '0');
+const clave = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const desdeClave = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const sumarDias = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const diaISO = d => (d.getDay() + 6) % 7 + 1;
+const fCorta = d => d ? `${pad(d.getDate())}/${pad(d.getMonth() + 1)}` : '';
+const fHora = d => d ? `${fCorta(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}` : '';
+const diasEntre = (a, b) => Math.round((b - a) / 864e5);
+const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const nomTransp = t => (t || '').replace(/-\d+$/, '').trim();
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function preparar(json) {
+  const ix = Object.fromEntries(json.columnas.map((c, i) => [c, i]));
+  const filas = json.registros.map(a => {
+    const r = {};
+    for (const c in ix) r[c] = a[ix[c]];
+    r.fSolD = r.fSol ? new Date(r.fSol) : null;
+    r.fGesD = r.fGes ? new Date(r.fGes) : null;
+    r.solK = r.fSolD ? clave(r.fSolD) : '';
+    r.gesK = r.fGesD ? clave(r.fGesD) : '';
+    r.entrega = RE_ENTREGA.test(r.nota);
+    r.pendiente = r.estado === 'Nuevo' || r.estado === 'Asignado';
+    r.txt = norm([r.dir, r.edif, r.transp, r.nota, r.obs, r.mun].join(' '));
+    return r;
+  });
+  const gen = new Date(json.generado);
+  HOY = new Date(gen.getFullYear(), gen.getMonth(), gen.getDate());
+  HOYk = clave(HOY);
+  // Atraso igual que la hoja "Atrasados": semanas desde el último día de
+  // servicio del municipio anterior a hoy (si hoy es el día, cuenta el de la semana pasada)
+  for (const r of filas) {
+    r.semanas = null;
+    if (r.estado !== 'Nuevo' || r.entrega || !r.fSolD) continue;
+    const delta0 = ((diaISO(HOY) - (DIA_SERVICIO[r.mun] || 1)) % 7 + 7) % 7;
+    const prev = sumarDias(HOY, -(delta0 === 0 ? 7 : delta0));
+    const d = desdeClave(r.solK);
+    r.semanas = d >= prev ? 0 : Math.min(4, Math.ceil(diasEntre(d, prev) / 7));
+  }
+  return { filas, calendario: json.calendario, generado: gen };
+}
+
+// ── filtros ─────────────────────────────────────────────────────────────────
+function rango() {
+  if (st.dia) return [st.dia, st.dia];
+  const n = st.periodo === 'hoy' ? 0 : Number(st.periodo) - 1;
+  return [clave(sumarDias(HOY, -n)), HOYk];
+}
+const enRango = (k, [a, b]) => k && k >= a && k <= b;
+const pasaMuni = r => !st.munis.size || st.munis.has(r.mun);
+const pasaQ = r => !st.q || r.txt.includes(st.q);
+const base = () => D.filas.filter(r => pasaMuni(r) && pasaQ(r));
+
+function nombrePeriodo() {
+  if (st.dia) return fCorta(desdeClave(st.dia));
+  return { hoy: 'hoy', 7: 'últimos 7 días', 30: 'últimos 30 días' }[st.periodo];
+}
+
+function munisDelDia(k) {
+  const c = D.calendario[diaISO(desdeClave(k)) - 1];
+  return c ? c.municipios.split('+').map(s => s.trim()).filter(m => MUNIS.includes(m)) : [];
+}
+
+// ── conjuntos que replican las hojas de la planilla ─────────────────────────
+function conjuntos() {
+  const B = base(), R = rango();
+  const munisHoy = munisDelDia(HOYk);
+  const grupo = r => r.estado === 'Nuevo' ? (r.entrega ? 1 : 2) : 3;
+  return {
+    B, R,
+    pendientes: B.filter(r => r.pendiente),
+    asignados: B.filter(r => r.estado === 'Asignado'),
+    atrasados: B.filter(r => r.semanas >= 1).sort((a, b) => a.fSolD - b.fSolD),
+    hoy: B.filter(r => r.pendiente && munisHoy.includes(r.mun) && r.solK < HOYk)
+      .sort((a, b) => grupo(a) - grupo(b) || a.dir.localeCompare(b.dir)),
+    ingresos: B.filter(r => enRango(r.solK, R)).sort((a, b) => b.fSolD - a.fSolD),
+    gestiones: B.filter(r => enRango(r.gesK, R)).sort((a, b) => b.fGesD - a.fGesD),
+    repetidos: repetidos(B.filter(r => r.pendiente)),
+    munisHoy, grupo,
+  };
+}
+
+function repetidos(P) {
+  const g = {};
+  for (const r of P) (g[norm(r.dir)] ||= []).push(r);
+  return Object.values(g).filter(v => v.length > 1).flat()
+    .sort((a, b) => a.dir.localeCompare(b.dir) || a.fSolD - b.fSolD);
+}
+
+// ── encabezado, semana y KPIs ───────────────────────────────────────────────
+// Momento de la última carga que salió bien (al abrir la página o con el botón)
+function renderEncabezado() {
+  $('actualizado').textContent = 'Actualizado ' + fHora(new Date());
+}
+
+function renderSemana(C) {
+  const hoyIso = diaISO(HOY);
+  $('semana').innerHTML = D.calendario.slice(0, 6).map((c, i) => {
+    const ms = c.municipios.split('+').map(s => s.trim());
+    // "La Paloma y Geminis" con "B+F": cada municipio descarga en la planta de su misma posición
+    const plantas = c.plantas.split(/\s+y\s+|,\s*/).map(x => x.trim());
+    const fijos = VACIADOS_FIJOS[i] || [];
+    return `<div class="dia ${i + 1 === hoyIso ? 'hoy' : ''}">
+      <div class="dia-n"><span>${DIAS[i]}</span>${i + 1 === hoyIso ? '<span class="dia-hoy">Hoy</span>' : ''}</div>
+      <div class="dia-sec dia-sec-cols"><span>Municipios</span><svg class="dia-fl" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg><span>Descarga</span></div>
+      <div class="dia-rows">${ms.map((m, j) => `
+        ${chipMuni(m, true)}
+        <svg class="dia-fl" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+        <span class="dia-p">${esc(plantas[j] ?? plantas[0])}</span>`).join('')}
+      </div>
+      <div class="dia-sec sig">Vaciados fijos</div>
+      <div class="dia-fijos">${fijos.length ? fijos.map(v => `
+        <div class="fv" style="--c:${COLOR_MUNI[v.mun] || COL.gris}">
+          <span class="mb">${esc(v.mun)}</span>
+          <div class="fv-n">${esc(v.n)}</div>
+        </div>`).join('') : '<div class="dia-vacio">Sin vaciados fijos</div>'}
+      </div></div>`;
+  }).join('');
+}
+
+function renderKpis(C) {
+  const P = nombrePeriodo();
+  const bols = C.gestiones.reduce((s, r) => s + (r.cantB || 0), 0);
+  const k = [
+    { l: 'Pendientes', v: C.pendientes.filter(r => r.estado === 'Nuevo').length, c: COL.pend },
+    { l: 'Asignados', v: C.asignados.length, c: COL.asig },
+    { l: 'Atrasados', v: C.atrasados.length, c: COL.atr },
+    { l: 'Ingresos · ' + P, v: C.ingresos.length, c: '#6250d6' },
+    { l: 'Gestionadas · ' + P, v: C.gestiones.length, c: COL.hecho },
+    { l: 'Bolsones · ' + P, v: bols, c: '#0f7a55' },
+  ];
+  $('kpis').innerHTML = k.map(x => `<div class="kpi" style="--c:${x.c}">
+    <div class="kpi-l">${x.l}</div><div class="kpi-v num">${fmt(x.v)}</div></div>`).join('');
+}
+
+
+// ── mapa ────────────────────────────────────────────────────────────────────
+const mapa = L.map('mapa', { zoomControl: true, preferCanvas: true }).setView([-34.86, -56.16], 12);
+L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, {
+  maxNativeZoom: 18, maxZoom: 20, subdomains: 'abcd',
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+}).addTo(mapa);
+mapa.attributionControl.setPrefix(false);
+const capa = L.layerGroup().addTo(mapa);
+const rend = L.canvas({ padding: .3 });
+let heat = null, marcadores = new Map(), primeraVez = true;
+
+function colorDe(r) {
+  if (r.estado === 'Asignado') return COL.asig;
+  if (r.estado === 'Nuevo') return r.semanas >= 1 ? COL.atr : COL.pend;
+  return (r.cantB || 0) > 0 ? COL.hecho : COL.gris;
+}
+
+function puntos(C) {
+  if (st.capa === 'pendientes') return C.pendientes.filter(r =>
+    r.estado === 'Asignado' ? st.ver.asignado : r.semanas >= 1 ? st.ver.atrasado : st.ver.nuevo);
+  if (st.capa === 'realizados') return C.gestiones;
+  if (st.capa === 'calor') return C.ingresos;
+  return [];
+}
+
+function renderMapa(C) {
+  capa.clearLayers(); marcadores.clear();
+  if (heat) { mapa.removeLayer(heat); heat = null; }
+  $('rutaRes').classList.remove('on');
+  $('rutaSel').hidden = st.capa !== 'recorridos';
+  renderToggles(C);
+
+  if (st.capa === 'recorridos') return renderRuta(C);
+  const P = puntos(C).filter(r => r.lat && r.lng);
+  if (st.capa === 'calor') {
+    heat = L.heatLayer(P.map(r => [r.lat, r.lng, Math.min(4, r.cantSol || 1)]),
+      { radius: 22, blur: 18, maxZoom: 15, minOpacity: .3,
+        gradient: { .2: '#cde2fb', .4: '#86b6ef', .6: '#2a78d6', .8: '#eb6834', 1: '#d03b3b' } }).addTo(mapa);
+  } else {
+    // Atrasados arriba de todo para que no queden tapados
+    const orden = r => r.estado === 'Nuevo' ? (r.semanas >= 1 ? 3 : 2) : 1;
+    for (const r of P.sort((a, b) => orden(a) - orden(b))) {
+      const rad = st.capa === 'realizados' ? 4 + Math.sqrt(r.cantB || 0) * 2.2 : 6;
+      const m = L.circleMarker([r.lat, r.lng], {
+        renderer: rend, radius: rad, color: '#fff', weight: 1.5,
+        fillColor: colorDe(r), fillOpacity: .9,
+      }).bindTooltip(esc(r.dir), { direction: 'top', offset: [0, -6] })
+        .on('click', () => seleccionar(r, false));
+      m.addTo(capa); marcadores.set(r.id, m);
+    }
+  }
+  if (primeraVez && P.length && $('mapa').offsetWidth) { mapa.fitBounds(L.latLngBounds(P.map(r => [r.lat, r.lng])), { padding: [30, 30] }); primeraVez = false; }
+  if (st.sel) resaltar(st.sel);
+}
+
+function renderToggles(C) {
+  const t = $('toggles');
+  if (st.capa === 'pendientes') {
+    const n = { nuevo: 0, atrasado: 0, asignado: 0 };
+    for (const r of C.pendientes) n[r.estado === 'Asignado' ? 'asignado' : r.semanas >= 1 ? 'atrasado' : 'nuevo']++;
+    const def = [['nuevo', 'Pendientes', COL.pend], ['atrasado', 'Atrasados', COL.atr], ['asignado', 'Asignados', COL.asig]];
+    t.innerHTML = def.map(([k, l, c]) => `<button class="tg ${st.ver[k] ? '' : 'off'}" data-k="${k}" style="--c:${c}"><i></i><span class="num">${n[k]}</span> ${l}</button>`).join('');
+    t.querySelectorAll('.tg').forEach(b => b.onclick = () => { st.ver[b.dataset.k] = !st.ver[b.dataset.k]; renderMapa(conjuntos()); });
+  } else if (st.capa === 'realizados') {
+    const con = C.gestiones.filter(r => r.cantB > 0).length;
+    t.innerHTML = `<span class="tg" style="--c:${COL.hecho}"><i></i><span class="num">${con}</span> Con bolsones</span>
+      <span class="tg" style="--c:${COL.gris}"><i></i><span class="num">${C.gestiones.length - con}</span> Sin bolsones</span>`;
+  } else if (st.capa === 'calor') {
+    t.innerHTML = `<span class="tg" style="--c:${COL.asig}"><i></i><span class="num">${C.ingresos.length}</span> Ingresos · ${nombrePeriodo()}</span>`;
+  } else t.innerHTML = '';
+}
+
+// Recorrido de un transportista en un día: gestiones en orden de hora
+function renderRuta(C) {
+  const dias = [...new Set(D.filas.map(r => r.gesK).filter(Boolean))].sort().reverse();
+  if (!st.rutaDia || !dias.includes(st.rutaDia)) st.rutaDia = dias[0];
+  const rd = $('rutaDia');
+  rd.min = dias[dias.length - 1]; rd.max = dias[0]; rd.value = st.rutaDia;
+  const delDia = D.filas.filter(r => r.gesK === st.rutaDia && pasaMuni(r) && r.transp && r.transp !== '-');
+  const cuenta = {};
+  for (const r of delDia) cuenta[r.transp] = (cuenta[r.transp] || 0) + 1;
+  const ts = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a]);
+  if (!ts.includes(st.rutaTransp)) st.rutaTransp = ts[0] || '';
+  $('rutaTransp').innerHTML = ts.length
+    ? ts.map(t => `<option value="${esc(t)}" ${t === st.rutaTransp ? 'selected' : ''}>${esc(nomTransp(t))} (${cuenta[t]})</option>`).join('')
+    : '<option>Sin gestiones ese día</option>';
+  const P = delDia.filter(r => r.transp === st.rutaTransp && r.lat).sort((a, b) => a.fGesD - b.fGesD);
+  if (!P.length) return;
+  const ll = P.map(r => [r.lat, r.lng]);
+  L.polyline(ll, { color: COL.asig, weight: 3, opacity: .55, dashArray: '6 6' }).addTo(capa);
+  P.forEach((r, i) => {
+    const m = L.marker([r.lat, r.lng], {
+      icon: L.divIcon({ className: '', html: `<div class="num-ico" style="width:22px;height:22px;${r.cantB > 0 ? '' : 'background:' + COL.gris}">${i + 1}</div>`, iconSize: [22, 22], iconAnchor: [11, 11] }),
+    }).bindTooltip(`${i + 1}. ${esc(r.dir)} · ${pad(r.fGesD.getHours())}:${pad(r.fGesD.getMinutes())}`, { direction: 'top', offset: [0, -10] })
+      .on('click', () => seleccionar(r, false));
+    m.addTo(capa); marcadores.set(r.id, m);
+  });
+  let km = 0;
+  for (let i = 1; i < ll.length; i++) km += mapa.distance(ll[i - 1], ll[i]) / 1000;
+  const bols = P.reduce((s, r) => s + (r.cantB || 0), 0);
+  const ini = P[0].fGesD, fin = P[P.length - 1].fGesD;
+  $('rutaRes').innerHTML = `<span>Paradas</span><b class="num">${P.length}</b><span>Bolsones</span><b class="num">${fmt(bols)}</b>
+    <span>Horario</span><b class="num">${pad(ini.getHours())}:${pad(ini.getMinutes())}–${pad(fin.getHours())}:${pad(fin.getMinutes())}</b>
+    <span>Distancia aprox.</span><b class="num">${fmt(km)} km</b>`;
+  $('rutaRes').classList.add('on');
+  mapa.fitBounds(L.latLngBounds(ll), { padding: [60, 60], maxZoom: 16 });
+}
+
+function resaltar(r) {
+  marcadores.forEach((m, id) => {
+    if (m.setStyle) m.setStyle(id === r.id ? { color: '#1A1714', weight: 3 } : { color: '#fff', weight: 1.5 });
+  });
+  const m = marcadores.get(r.id);
+  if (m && m.bringToFront) m.bringToFront();
+}
+
+function fichaHTML(r) {
+  const estado = r.estado === 'Nuevo' && r.semanas >= 1 ? ['Atrasado ' + (r.semanas >= 4 ? '4+ sem.' : r.semanas + ' sem.'), COL.atr, '#F9E1E0']
+    : r.estado === 'Nuevo' ? ['Nuevo', COL.pend, '#FCE9DF']
+    : r.estado === 'Asignado' ? ['Asignado', COL.asig, '#E1ECFA'] : [r.estado, '#0f7a55', '#DDF3EA'];
+  const fila = (k, v) => v || v === 0 ? `<dt>${k}</dt><dd>${esc(v)}</dd>` : '';
+  const dias = r.fSolD ? diasEntre(desdeClave(r.solK), r.fGesD ? desdeClave(r.gesK) : HOY) : null;
+  return `<button class="ficha-x" aria-label="Cerrar">×</button>
+    <h3>${esc(r.dir)}</h3>
+    <div class="sub">${esc(r.edif && norm(r.edif) !== norm(r.dir) ? r.edif + ' · ' : '')}${esc(r.tipoEdif)} · Municipio ${chipMuni(r.mun)}</div>
+    <hr>
+    <div style="margin-bottom:.5rem"><span class="est" style="--c:${estado[1]};--bg-c:${estado[2]}">${esc(estado[0])}</span></div>
+    <dl>
+      ${fila('Solicitud', r.fSolD ? fHora(r.fSolD) + (dias != null ? ` · hace ${dias} d` : '') : '')}
+      ${fila('Pedido', r.cantSol != null ? fmt(r.cantSol) + (r.entrega ? ' · entrega/cambio' : '') : '')}
+      ${fila('Nota', r.nota)}
+      ${r.fGesD ? fila('Gestión', fHora(r.fGesD) + ` · ${dias} d después`) : ''}
+      ${fila('Transportista', nomTransp(r.transp) === '' || r.transp === '-' ? '' : nomTransp(r.transp))}
+      ${r.fGesD ? fila('Bolsones', `${fmt(r.cantB)}${r.tipoB ? ' · ' + r.tipoB : ''}`) : ''}
+      ${fila('Planta', r.planta)}
+      ${fila('Observación', r.obs)}
+      ${fila('Solicitud n.º', r.id)}
+    </dl>`;
+}
+
+function seleccionar(r, volar) {
+  st.sel = r;
+  resaltar(r);
+  if (volar && r.lat) mapa.flyTo([r.lat, r.lng], Math.max(mapa.getZoom(), 16), { duration: .6 });
+  $('ficha').innerHTML = fichaHTML(r);
+  $('ficha').classList.add('on');
+  $('ficha').querySelector('.ficha-x').onclick = cerrarFicha;
+  document.querySelectorAll('.it').forEach(li => li.classList.toggle('sel', +li.dataset.id === r.id));
+}
+function cerrarFicha() {
+  st.sel = null; $('ficha').classList.remove('on');
+  marcadores.forEach(m => m.setStyle && m.setStyle({ color: '#fff', weight: 1.5 }));
+  document.querySelectorAll('.it.sel').forEach(li => li.classList.remove('sel'));
+}
+mapa.on('click', cerrarFicha);
+
+// ── mapa grande de Operación del día ────────────────────────────────────────
+// Se crea recién cuando la pestaña está visible (Leaflet necesita tamaño real).
+let mapaOp = null, capaOp, marcadoresOp = new Map(), selOp = null;
+const rendOp = L.canvas({ padding: .3 }); // cada mapa necesita su propio dibujador
+const VER_OP = { realizados: true, pendientes: true, asignados: true };
+// Con gestión hoy = realizado, aunque la planilla todavía lo tenga "Asignado" sin cerrar
+// (igual que la hoja "Informe realizados"). Asignados = los que todavía no se gestionaron.
+const grupoOp = r => r.gesK === HOYk ? 'realizados' : r.estado === 'Asignado' ? 'asignados' : 'pendientes';
+
+function renderMapaOp(C) {
+  if (!$('mapaOp').offsetWidth) return;
+  let primera = false;
+  if (!mapaOp) {
+    mapaOp = L.map('mapaOp', { zoomControl: true, preferCanvas: true }).setView([-34.86, -56.16], 12);
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, {
+      maxNativeZoom: 18, maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap &copy; CARTO',
+    }).addTo(mapaOp);
+    mapaOp.attributionControl.setPrefix(false);
+    capaOp = L.layerGroup().addTo(mapaOp);
+    mapaOp.on('click', cerrarFichaOp);
+    primera = true;
+  }
+  mapaOp.invalidateSize();
+  const todos = [...new Set([...C.gestiones, ...C.pendientes])];
+  const n = { realizados: 0, pendientes: 0, asignados: 0 };
+  for (const r of todos) n[grupoOp(r)]++;
+  const def = [['realizados', 'Realizados', COL.hecho], ['pendientes', 'Pendientes', COL.pend], ['asignados', 'Asignados', COL.asig]];
+  $('opToggles').innerHTML = def.map(([k, l, c]) => `<button class="tg ${VER_OP[k] ? '' : 'off'}" data-k="${k}" style="--c:${c}"><i></i><span class="num">${n[k]}</span> ${l}</button>`).join('');
+  $('opToggles').querySelectorAll('.tg').forEach(b => b.onclick = () => { VER_OP[b.dataset.k] = !VER_OP[b.dataset.k]; renderMapaOp(conjuntos()); });
+
+  capaOp.clearLayers(); marcadoresOp.clear();
+  const P = todos.filter(r => r.lat && r.lng && VER_OP[grupoOp(r)]);
+  const orden = r => ({ realizados: 1, asignados: 2, pendientes: r.semanas >= 1 ? 4 : 3 })[grupoOp(r)];
+  for (const r of P.sort((a, b) => orden(a) - orden(b))) {
+    const m = L.circleMarker([r.lat, r.lng], {
+      renderer: rendOp, radius: grupoOp(r) === 'realizados' ? 4 + Math.sqrt(r.cantB || 0) * 2.2 : 6,
+      color: '#fff', weight: 1.5, fillColor: grupoOp(r) === 'realizados' ? ((r.cantB || 0) > 0 ? COL.hecho : COL.gris) : colorDe(r), fillOpacity: .9,
+    }).bindTooltip(esc(r.dir), { direction: 'top', offset: [0, -6] })
+      .on('click', e => { L.DomEvent.stopPropagation(e); seleccionarOp(r); });
+    m.addTo(capaOp); marcadoresOp.set(r.id, m);
+  }
+  if (primera && P.length) mapaOp.fitBounds(L.latLngBounds(P.map(r => [r.lat, r.lng])), { padding: [30, 30] });
+  if (selOp) { if (marcadoresOp.has(selOp.id)) seleccionarOp(selOp); else cerrarFichaOp(); }
+}
+
+function seleccionarOp(r) {
+  selOp = r;
+  marcadoresOp.forEach((m, id) => m.setStyle(id === r.id ? { color: '#1A1714', weight: 3 } : { color: '#fff', weight: 1.5 }));
+  marcadoresOp.get(r.id)?.bringToFront();
+  $('fichaOp').innerHTML = fichaHTML(r);
+  $('fichaOp').classList.add('on');
+  $('fichaOp').querySelector('.ficha-x').onclick = cerrarFichaOp;
+}
+function cerrarFichaOp() {
+  selOp = null; $('fichaOp').classList.remove('on');
+  marcadoresOp.forEach(m => m.setStyle({ color: '#fff', weight: 1.5 }));
+}
+
+// ── panel de listas (equivalente a las hojas de la planilla) ────────────────
+const TABS = [
+  { k: 'hoy', n: 'Realizar hoy' },
+  { k: 'atrasados', n: 'Atrasados' },
+  { k: 'asignados', n: 'Asignados' },
+  { k: 'ingresos', n: 'Ingresos' },
+  { k: 'gestiones', n: 'Gestiones' },
+  { k: 'repetidos', n: 'Repetidos' },
+];
+
+function renderPanel(C) {
+  $('tabs').innerHTML = TABS.map(t => `<button data-k="${t.k}" class="${st.tab === t.k ? 'on' : ''}">${t.n}<span class="n num">${C[t.k].length}</span></button>`).join('');
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { st.tab = b.dataset.k; renderPanel(conjuntos()); });
+
+  const L_ = C[st.tab];
+  const P = nombrePeriodo();
+  const cab = {
+    hoy: C.munisHoy.length ? `Municipios de hoy: <b>${C.munisHoy.join(' y ')}</b> · solicitudes anteriores a hoy` : 'Hoy no se trabaja',
+    atrasados: 'Vaciados que ya pasaron su día de servicio',
+    asignados: `${fmt(L_.length)} asignados · ${new Set(L_.map(r => r.transp)).size} transportistas`,
+    ingresos: `Ingresadas ${P}`,
+    gestiones: `Gestionadas ${P} · ${fmt(L_.reduce((s, r) => s + (r.cantB || 0), 0))} bolsones`,
+    repetidos: 'Misma dirección con más de una solicitud abierta',
+  }[st.tab];
+  $('panelH').innerHTML = `<span>${cab}</span>`;
+
+  if (!L_.length) { $('lista').innerHTML = '<li class="vacio">No hay solicitudes para mostrar.</li>'; return; }
+  const titulosHoy = { 1: 'Entregas y cambios', 2: 'Vaciados nuevos', 3: 'Asignados' };
+  let html = '', ultimo = null;
+  for (const r of L_.slice(0, 400)) {
+    if (st.tab === 'hoy' && C.grupo(r) !== ultimo) { ultimo = C.grupo(r); html += `<li class="grupo">${titulosHoy[ultimo]}</li>`; }
+    if (st.tab === 'asignados' && r.transp !== ultimo) { ultimo = r.transp; html += `<li class="grupo">${esc(nomTransp(r.transp) || 'Sin transportista')}</li>`; }
+    let der = '', sub = r.nota;
+    if (st.tab === 'gestiones') { der = `${pad(r.fGesD.getHours())}:${pad(r.fGesD.getMinutes())}`; sub = `${nomTransp(r.transp)} · ${fmt(r.cantB)} bols.${r.obs && !/autom/i.test(r.obs) ? ' · ' + r.obs : ''}`; }
+    else if (st.tab === 'ingresos') der = fHora(r.fSolD);
+    else if (st.tab === 'atrasados') der = `<span style="color:${COL.atr};font-weight:700">${r.semanas >= 4 ? '4+' : r.semanas} sem</span>`;
+    else der = r.fSolD ? `hace ${diasEntre(desdeClave(r.solK), HOY)} d` : '';
+    if (st.tab === 'repetidos') sub = `${r.estado} · ${fCorta(r.fSolD)}${r.nota ? ' · ' + r.nota : ''}`;
+    html += `<li class="it ${st.sel && st.sel.id === r.id ? 'sel' : ''}" data-id="${r.id}">${chipMuni(r.mun)}
+      <span class="it-d">${esc(r.dir)}</span><span class="it-r num">${der}</span>
+      ${sub ? `<span class="it-s">${esc(sub)}</span>` : ''}</li>`;
+  }
+  if (L_.length > 400) html += `<li class="vacio">Se muestran 400 de ${fmt(L_.length)}. Filtrá por municipio o buscá.</li>`;
+  $('lista').innerHTML = html;
+  const porId = new Map(L_.map(r => [r.id, r]));
+  $('lista').querySelectorAll('.it').forEach(li => li.onclick = () => {
+    const r = porId.get(+li.dataset.id);
+    if (!marcadores.has(r.id) && st.capa !== 'recorridos') {
+      // Si el punto no está en la capa actual, pasar a la capa que lo muestra
+      st.capa = r.pendiente ? 'pendientes' : 'realizados';
+      if (r.pendiente) st.ver = { nuevo: true, atrasado: true, asignado: true };
+      marcarCapa(); renderMapa(conjuntos());
+    }
+    seleccionar(r, true);
+  });
+}
+
+// ── gráficas ────────────────────────────────────────────────────────────────
+Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#5F5A54';
+Chart.defaults.plugins.tooltip.enabled = false; // sin etiquetas negras al pasar el mouse
+const graficas = {};
+const ejes = (horiz, apilado) => ({
+  x: { stacked: apilado, grid: { display: !!horiz, color: '#EEEBE5', drawTicks: false }, border: { display: false }, ticks: { padding: 6, precision: 0 } },
+  y: { stacked: apilado, grid: { display: !horiz, color: '#EEEBE5', drawTicks: false }, border: { display: false }, ticks: { padding: 6, precision: 0 }, beginAtZero: true },
+});
+
+function grafica(id, cfg, vacio) {
+  graficas[id]?.destroy();
+  const cont = $(id).parentElement;
+  cont.querySelector('.g-vacio')?.remove();
+  if (vacio) { cont.insertAdjacentHTML('beforeend', '<div class="g-vacio">Sin datos hoy</div>'); graficas[id] = null; return; }
+  graficas[id] = new Chart($(id), cfg);
+}
+
+function barrasH(id, etiquetas, series) {
+  $(id).parentElement.style.height = Math.max(150, etiquetas.length * 30 + 50) + 'px';
+  grafica(id, {
+    type: 'bar',
+    data: { labels: etiquetas, datasets: series.map(s => ({ borderRadius: 4, borderSkipped: false, maxBarThickness: 18, categoryPercentage: .8, barPercentage: .9, ...s })) },
+    options: {
+      indexAxis: 'y', maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: { legend: { display: false } },
+      scales: ejes(true, series.length > 1),
+    },
+  }, !etiquetas.length);
+}
+
+function renderGraficas(C) {
+  // 1. Pendientes por antigüedad (hoja Atrasados)
+  const pendM = MUNIS.filter(m => !st.munis.size || st.munis.has(m));
+  const vac = C.B.filter(r => r.semanas != null);
+  $('kAtraso').innerHTML = ATRASO.map(a => `<span><i style="--c:${a.c}"></i>${a.n}</span>`).join('');
+  grafica('cAtraso', {
+    type: 'bar',
+    data: {
+      labels: pendM,
+      datasets: ATRASO.map((a, i) => ({
+        label: a.n, backgroundColor: a.c, borderColor: '#fff', borderWidth: { top: 0, bottom: 0, left: 0, right: 2 },
+        borderRadius: 4, borderSkipped: false, maxBarThickness: 22,
+        data: pendM.map(m => vac.filter(r => r.mun === m && r.semanas === i).length),
+      })),
+    },
+    options: {
+      indexAxis: 'y', maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: { legend: { display: false } },
+      scales: ejes(true, true),
+    },
+  }, !vac.length);
+
+  // 2. Días hasta la gestión por municipio (período)
+  const resp = pendM.map(m => {
+    const v = C.gestiones.filter(r => r.mun === m && r.fSolD).map(r => diasEntre(desdeClave(r.solK), desdeClave(r.gesK))).sort((a, b) => a - b);
+    return { m, n: v.length, med: v.length ? v[Math.floor((v.length - 1) / 2)] : null, prom: v.length ? v.reduce((a, b) => a + b, 0) / v.length : null };
+  });
+  grafica('cRespuesta', {
+    type: 'bar',
+    data: { labels: pendM, datasets: [{ data: resp.map(x => x.med), backgroundColor: COL.hecho, borderRadius: 4, borderSkipped: 'start', maxBarThickness: 34 }] },
+    options: {
+      maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: { legend: { display: false } },
+      scales: ejes(false, false),
+    },
+  }, !C.gestiones.length);
+
+  // 3. Ingresos vs gestiones por día (todo el rango de datos)
+  const dias = [];
+  const min = D.filas.reduce((m, r) => r.solK && r.solK < m ? r.solK : m, HOYk);
+  for (let d = desdeClave(min); clave(d) <= HOYk; d = sumarDias(d, 1)) dias.push(clave(d));
+  const ing = {}, ges = {};
+  for (const r of C.B) { if (r.solK) ing[r.solK] = (ing[r.solK] || 0) + 1; if (r.gesK) ges[r.gesK] = (ges[r.gesK] || 0) + 1; }
+  const R = C.R;
+  grafica('cDiario', {
+    type: 'line',
+    data: {
+      labels: dias.map(k => { const d = desdeClave(k); return DIAS[diaISO(d) - 1].slice(0, 2) + ' ' + fCorta(d); }),
+      datasets: [
+        { label: 'Ingresadas', data: dias.map(k => ing[k] || 0), borderColor: COL.asig, backgroundColor: COL.asig },
+        { label: 'Gestionadas', data: dias.map(k => ges[k] || 0), borderColor: COL.hecho, backgroundColor: COL.hecho },
+      ].map(s => ({ ...s, borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 5, pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2 })),
+    },
+    options: {
+      maintainAspectRatio: false, animation: { duration: 250 }, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false } },
+      scales: { ...ejes(false, false), x: { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } } },
+    },
+    plugins: [{ // sombrea el período elegido
+      id: 'periodo', beforeDatasetsDraw(ch) {
+        const i0 = dias.indexOf(R[0]), i1 = dias.indexOf(R[1]);
+        if (i0 < 0 && i1 < 0) return;
+        const x = ch.scales.x, a = x.getPixelForValue(Math.max(0, i0)), b = x.getPixelForValue(i1 < 0 ? dias.length - 1 : i1);
+        const w = Math.max(10, b - a + 10), c = ch.ctx;
+        c.save(); c.fillStyle = 'rgba(57,116,94,.08)'; c.fillRect(a - 5, ch.chartArea.top, w, ch.chartArea.bottom - ch.chartArea.top); c.restore();
+      },
+    }],
+  });
+
+  // 4. Gestiones por transportista (período)
+  const porT = {};
+  for (const r of C.gestiones) {
+    if (!r.transp || r.transp === '-') continue;
+    const t = (porT[r.transp] ||= { n: 0, b: 0, s: 0 });
+    t.n++; t.b += r.cantB || 0; if (!(r.cantB > 0)) t.s++;
+  }
+  const tops = Object.entries(porT).sort((a, b) => b[1].n - a[1].n).slice(0, 15);
+  barrasH('cTransp', tops.map(([t]) => nomTransp(t)), [
+    { label: 'Con bolsones', data: tops.map(([, v]) => v.n - v.s), backgroundColor: COL.hecho },
+    { label: 'Sin bolsones', data: tops.map(([, v]) => v.s), backgroundColor: '#CFCAC2' },
+  ]);
+
+  // 5. Bolsones descargados por planta (período)
+  const porP = {};
+  for (const r of C.gestiones) if (r.planta) porP[r.planta] = (porP[r.planta] || 0) + (r.cantT || 0);
+  const pl = Object.entries(porP).sort((a, b) => b[1] - a[1]);
+  barrasH('cPlanta', pl.map(x => x[0]), [{ data: pl.map(x => x[1]), backgroundColor: COL.asig }]);
+
+  // 6. Ingresos por tipo de edificio (período)
+  const porE = {};
+  for (const r of C.ingresos) porE[r.tipoEdif || 'Sin dato'] = (porE[r.tipoEdif || 'Sin dato'] || 0) + 1;
+  const ed = Object.entries(porE).sort((a, b) => b[1] - a[1]);
+  barrasH('cEdif', ed.map(x => x[0]), [{ data: ed.map(x => x[1]), backgroundColor: '#6250d6' }]);
+
+  // 7. Tipo de bolsón (período)
+  const porB = {};
+  for (const r of C.gestiones) if (r.cantB > 0) porB[r.tipoB || 'Sin dato'] = (porB[r.tipoB || 'Sin dato'] || 0) + r.cantB;
+  const tb = Object.entries(porB).sort((a, b) => b[1] - a[1]);
+  barrasH('cTipo', tb.map(x => x[0]), [{ data: tb.map(x => x[1]), backgroundColor: '#0f7a55' }]);
+
+  renderCalor(C);
+}
+
+function renderCalor(C) {
+  const H0 = 6, H1 = 20, m = {};
+  let max = 0;
+  for (const r of C.gestiones) {
+    const d = diaISO(r.fGesD), h = r.fGesD.getHours();
+    if (h < H0 || h > H1 || d > 6) continue;
+    const k = d + '-' + h; m[k] = (m[k] || 0) + 1; max = Math.max(max, m[k]);
+  }
+  const ramp = ['#E7F0FC', '#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'];
+  let html = '<span></span>';
+  for (let h = H0; h <= H1; h++) html += `<span class="lx">${h}</span>`;
+  for (let d = 1; d <= 6; d++) {
+    html += `<span class="ly">${DIAS[d - 1].slice(0, 3)}</span>`;
+    for (let h = H0; h <= H1; h++) {
+      const v = m[d + '-' + h] || 0;
+      const bg = v ? ramp[Math.min(ramp.length - 1, Math.floor(v / max * (ramp.length - 1)))] : '';
+      html += `<span class="c" style="${bg ? 'background:' + bg : ''}"></span>`;
+    }
+  }
+  $('calor').innerHTML = html;
+}
+
+// ── render general ──────────────────────────────────────────────────────────
+function marcarCapa() { $('capas').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.c === st.capa)); }
+
+function render() {
+  const C = conjuntos();
+  renderSemana(C); renderKpis(C); marcarCapa();
+  renderMapa(C); renderPanel(C); renderGraficas(C); renderMapaOp(C); renderAtrasados(C);
+  if (st.sel && !C.B.some(r => r.id === st.sel.id)) cerrarFicha();
+}
+
+// ── pestaña Atrasados: misma tabla y detalle que la hoja "Atrasados" ────────
+function renderAtrasados(C) {
+  // Solo vaciados en estado Nuevo con al menos una semana de atraso (r.semanas viene de preparar())
+  const atr = C.B.filter(r => r.semanas >= 1);
+  // Municipios en el orden en que se atienden en la semana (calendario de la hoja Division): B F A G E C D CH
+  const orden = [...new Set(D.calendario.flatMap(c => c.municipios.split('+').map(x => x.trim())).filter(m => MUNIS.includes(m)))];
+  const det = C.atrasados.slice().sort((a, b) => orden.indexOf(a.mun) - orden.indexOf(b.mun) || a.fSolD - b.fSolD);
+
+  // Matriz semanas × municipio. Las casillas con atrasados van en el azul de la barra, más intenso cuantos más hay
+  const max = Math.max(1, ...orden.flatMap(m => [1, 2, 3, 4].map(i => atr.filter(r => r.mun === m && r.semanas === i).length)));
+  let html = `<div class="hm-h izq"></div>${orden.map(m => `<div class="hm-h">${chipMuni(m)}</div>`).join('')}`;
+  ATRASO.forEach((a, i) => {
+    if (!i) return; // "Sin atraso" no se muestra
+    html += `<div class="hm-l">${a.n}</div>`;
+    html += orden.map(m => {
+      const n = atr.filter(r => r.mun === m && r.semanas === i).length;
+      const fondo = n ? `background:color-mix(in srgb, #1b3f74 ${Math.round((.55 + .45 * n / max) * 100)}%, #FFFFFF);color:#fff` : '';
+      return `<div class="hc ${n ? '' : 'cero'}" style="${fondo}">${n}</div>`;
+    }).join('');
+  });
+  $('hmAtraso').innerHTML = html;
+
+  // Detalle: ordenado por municipio y fecha, como la hoja. El municipio se ve por el color de la izquierda.
+  const ICO_CAL = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+  const ICO_RELOJ = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  // Sin atrasados: la tabla queda vacía y el recuadro del detalle lo avisa
+  $('atLista').innerHTML = det.length ? `<div class="at-lista">${det.map(r => `
+    <div class="at-it" style="--m:${COLOR_MUNI[r.mun] || COL.gris}">
+      <div class="at-dir">${esc(r.dir)}</div>
+      <div class="at-sub"><span>${ICO_CAL}Solicitada ${fHora(r.fSolD)}</span><span>${ICO_RELOJ}hace ${diasEntre(desdeClave(r.solK), HOY)} días</span></div>
+      ${r.nota ? `<div class="at-desc">${esc(r.nota)}</div>` : ''}
+    </div>`).join('')}</div>`
+    : '<div class="at-vacio">No hay solicitudes atrasadas</div>';
+}
+
+// Categorías. La primera se abre por defecto; las demás quedan en la URL (#pendientes) para que al recargar siga ahí.
+const CATS = ['organizacion', 'resumen', 'pendientes', 'atrasados', 'operacion'];
+function mostrarCat(k) {
+  document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', b.dataset.cat === k));
+  document.querySelectorAll('.cat').forEach(c => c.classList.toggle('on', c.dataset.cat === k));
+  history.replaceState(null, '', k === CATS[0] ? location.pathname + location.search : '#' + k);
+  // El mapa y las gráficas se dibujaron ocultos (tamaño 0): se ajustan o se rehacen al mostrarlos
+  if (!D) return;
+  if (k === 'resumen') { mapa.invalidateSize(); if (primeraVez) renderMapa(conjuntos()); }
+  else { const C = conjuntos(); renderGraficas(C); if (k === 'operacion') renderMapaOp(C); }
+}
+document.querySelectorAll('#cats button').forEach(b => b.onclick = () => mostrarCat(b.dataset.cat));
+if (CATS.includes(location.hash.slice(1))) mostrarCat(location.hash.slice(1));
+$('capas').querySelectorAll('button').forEach(b => b.onclick = () => { st.capa = b.dataset.c; marcarCapa(); renderMapa(conjuntos()); });
+$('rutaDia').onchange = e => { st.rutaDia = e.target.value; st.rutaTransp = ''; renderMapa(conjuntos()); };
+$('rutaTransp').onchange = e => { st.rutaTransp = e.target.value; renderMapa(conjuntos()); };
+
+async function cargar() {
+  const b = $('actualizar');
+  b.classList.add('cargando');
+  try {
+    const sep = CONFIG.fuente.includes('?') ? '&' : '?';
+    const res = await fetch(CONFIG.fuente + sep + 't=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    D = preparar(await res.json());
+    renderEncabezado(); render();
+    $('cargador')?.remove();
+  } catch (err) {
+    if ($('cargador')) $('cargador').textContent = 'No se pudieron cargar los datos (' + err.message + ').';
+    else alert('No se pudieron actualizar los datos (' + err.message + ').');
+  } finally {
+    b.classList.remove('cargando');
+  }
+}
+$('actualizar').onclick = cargar;
+cargar();
+
+window.addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+</script>
+</body>
+</html>
