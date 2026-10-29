@@ -222,7 +222,8 @@ async function actualizarBase(s, sec) {
   b.disabled = true;
   try {
     if (!s.webhook) { await leerBase(s, sec); return; }
-    mostrar(est, 'Buscando datos nuevos…');
+    // Un solo mensaje mientras n8n arma la base y GitHub la publica
+    mostrar(est, 'Actualizando');
     let r;
     try {
       // ngrok gratis muestra una página de aviso a los navegadores; este encabezado la saltea
@@ -235,7 +236,6 @@ async function actualizarBase(s, sec) {
     }
     if (!r.actualizado) { await leerBase(s, sec); return; }
     const subida = horaLocal(new Date());
-    mostrar(est, 'Publicando… (1-2 min)');
     for (let i = 0; i < 20; i++) {
       await esperar(15000);
       if (await firmaPublicada(s) === r.firma) { mostrar(est, 'Actualizado ' + subida); return; }
