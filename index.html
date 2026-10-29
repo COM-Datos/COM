@@ -70,9 +70,11 @@ body{
 .item-name{flex:1;min-width:0;font-size:14px;font-weight:600;letter-spacing:-.1px;line-height:1.25}
 .item-arrow{flex:none;color:var(--text3);font-size:18px}
 .sin{font-size:13px;color:var(--text3);padding:.4rem .2rem}
+/* Hasta que se pone la contraseña no se muestra la portada */
+body.bloqueado .cover{visibility:hidden}
 </style>
 </head>
-<body>
+<body class="bloqueado">
 <div class="cover">
   <h1 class="headline">Centro Operativo de Montevideo</h1>
   <div class="rule"></div>
@@ -85,6 +87,7 @@ body{
   <div class="rule"></div>
   <div class="servicios" id="servicios"></div>
 </div>
+<script src="assets/llave.js"></script>
 <script>
 // Un cuadro por servicio. Cada servicio tiene UNA base de datos que comparten todas sus páginas:
 //   base:    archivo JSON que leen las páginas del servicio (con un campo "generado" = fecha de la copia).
@@ -217,8 +220,14 @@ $('gps').onclick = async () => {
   }
 };
 
-armar();
-mostrar($('gps-estado'), ultima(null));
+// La portada pide la contraseña al abrir, una sola vez por navegador (ver assets/llave.js).
+// Con eso quedan habilitados también los datos privados de las páginas internas.
+function abrirPortada() {
+  document.body.classList.remove('bloqueado');
+  armar();
+  mostrar($('gps-estado'), ultima(null));
+}
+COMLlave.obtener('paginas/datos/llave.json').then(abrirPortada, abrirPortada);
 
 window.addEventListener('pageshow', function (event) {
   if (event.persisted) window.location.reload();

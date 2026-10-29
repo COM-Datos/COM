@@ -40,4 +40,15 @@ El botón **Actualizar GPS** está reservado (`GPS_WEBHOOK = null`).
 
 4. Commit y push.
 
-El repo es público: las bases no deben llevar nombres, teléfonos ni emails.
+El repo es público: las bases no deben llevar nombres, teléfonos ni emails en claro.
+
+## Contraseña y datos privados
+
+La portada pide una contraseña al abrir, una sola vez por navegador (`assets/llave.js`).
+Lo privado (por ejemplo, teléfonos y descripciones completas de Bolsones) va **cifrado** en
+`paginas/datos/*-privado.json`; `paginas/datos/llave.json` sirve para comprobar la contraseña y no la contiene.
+Las páginas internas que usan datos privados cargan `../assets/llave.js` y piden la contraseña si se
+abren directo. Las páginas para clientes no la cargan y abren sin contraseña.
+
+La contraseña no está en el repo: la tiene el generador de los datos (ver `dashboard-bolsones/README.md`
+en la PC del COM).

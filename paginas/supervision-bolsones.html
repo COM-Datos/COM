@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="../assets/llave.js"></script>
 <style>
 :root{
   --bg:#F7F6F3; --card:#FFFFFF; --border:#E6E2DA; --border2:#D6D1C8;
@@ -26,7 +27,8 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
-html{scroll-behavior:smooth}
+/* Lugar de la barra de desplazamiento siempre reservado: el ancho de la página no cambia entre pestañas cortas y largas */
+html{scroll-behavior:smooth;overflow-y:scroll;scrollbar-gutter:stable}
 body{font-family:'DM Sans',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;
   background:radial-gradient(circle at 12% 0%,#EDEEF9 0%,transparent 40%),radial-gradient(circle at 95% 100%,#E7F3EE 0%,transparent 40%),var(--bg);
   background-attachment:fixed;min-height:100vh}
@@ -75,27 +77,16 @@ button{font:inherit;color:inherit;cursor:pointer}
 .dia-vacio{font-size:12px;color:var(--text3);padding:.2rem .15rem}
 .mb{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 10px 0 6px;border-radius:7px;border-left:4px solid transparent;background:#F0EDE7;color:var(--text);font-size:12px;font-weight:700}
 
-/* KPIs */
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
-.kpi{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:.9rem 1rem;box-shadow:var(--shadow);position:relative;overflow:hidden;cursor:default}
-.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,var(--border2))}
-.kpi-l{font-size:12px;font-weight:600;color:var(--text2)}
-.kpi-v{font-size:30px;font-weight:700;letter-spacing:-1px;line-height:1.15;margin-top:.2rem}
-
-/* Mapa + panel */
-.principal{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;margin-bottom:14px}
+/* Tarjetas y mapa */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
 .mapa-card{position:relative;overflow:hidden;isolation:isolate;height:640px;display:flex;flex-direction:column}
 .mapa-bar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:.7rem .8rem;border-bottom:1px solid var(--border)}
-.capas button{font-size:12.5px;padding:5px 11px}
 .toggles{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .tg{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--card);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--text2)}
 .tg i{width:9px;height:9px;border-radius:50%;background:var(--c)}
 .tg.off{opacity:.42}
 .tg.off i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
-.ruta-sel{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
-.ruta-sel select,.ruta-sel input{font:inherit;font-size:12.5px;border:1px solid var(--border);border-radius:9px;padding:5px 8px;background:var(--card);color:var(--text);max-width:220px}
-#mapa,#mapaOp{flex:1;background:#EFEDE8}
+#mapaOp{flex:1;background:#EFEDE8}
 .mapa-op{height:600px;margin-bottom:14px}
 .mapa-op .toggles{margin-left:0}
 .leaflet-container{font:inherit}
@@ -112,28 +103,39 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ficha dd{color:var(--text);min-width:0;overflow-wrap:anywhere}
 .est{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px;background:var(--bg-c);color:var(--c)}
 .est::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
-.ruta-res{position:absolute;right:12px;top:66px;z-index:900;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:.6rem .8rem;font-size:12px;display:none}
-.ruta-res.on{display:grid;grid-template-columns:auto auto;gap:2px 12px}
-.ruta-res b{font-weight:700;text-align:right}
-.ruta-res span{color:var(--text2)}
-.num-ico{background:var(--asig);color:#fff;border:2px solid #fff;border-radius:50%;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.25)}
-
-.panel{height:640px;display:flex;flex-direction:column;overflow:hidden}
-.tabs{display:flex;gap:2px;overflow-x:auto;padding:.55rem .55rem 0;border-bottom:1px solid var(--border);scrollbar-width:none}
-.tabs button{display:inline-flex;align-items:center;border:0;background:none;padding:.55rem .6rem;font-size:12.5px;font-weight:600;color:var(--text3);border-top:2px solid transparent;border-bottom:2px solid transparent;white-space:nowrap}
-.tabs button.on{color:var(--text);border-bottom-color:var(--text)}
-.tabs .n{display:inline-flex;align-items:center;font-size:11px;background:#F0EDE7;color:var(--text2);border-radius:99px;padding:1px 6px;margin-left:3px}
-.panel-h{padding:.6rem .9rem;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:.5rem}
-.lista{flex:1;overflow-y:auto;list-style:none}
-.it{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:start;padding:.6rem .9rem;border-bottom:1px solid #F2EFEA;cursor:pointer}
-.it:hover{background:#FAF9F6}
-.it.sel{background:#F3F7F5}
-.it .mb{grid-row:span 2;margin-top:1px}
-.it-d{font-size:13px;font-weight:600;line-height:1.3;min-width:0}
-.it-s{font-size:11.5px;color:var(--text2);grid-column:2/4;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.it-r{font-size:11.5px;color:var(--text3);white-space:nowrap;text-align:right}
-.grupo{position:sticky;top:0;background:#F7F6F3;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;padding:.45rem .9rem;border-bottom:1px solid var(--border);z-index:1}
-.vacio{padding:2rem 1rem;text-align:center;color:var(--text3);font-size:13px}
+/* Pestañas Para borrar e Ingreso */
+.sec-t{font-size:15px;font-weight:700;letter-spacing:-.2px;margin-bottom:.8rem}
+.rep-sol{display:flex;flex-direction:column;gap:6px}
+.rep-fila{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--text2)}
+.rep-fila b{font-weight:700;color:var(--text)}
+.ing-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.9rem}
+.ing-f{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text2)}
+.ing-f input{font:inherit;font-size:13px;font-weight:600;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:6px 10px;background:var(--card)}
+.ing-tot{font-size:13px;color:var(--text2)}
+.ing-tot b{font-size:15px;color:var(--text)}
+.tabla-wrap+.tabla-wrap{margin-top:1.4rem} /* separa la tabla de "falta algo" de la de completas */
+/* Cada columna mide lo justo (width:1% + sin cortes de línea) y la última se queda con el espacio que sobra.
+   Todo centrado menos la última. El ancho común entre las dos tablas lo pone igualarColumnas(). */
+/* (.tabla.tabla-ing para ganarle al text-align:left de .tabla th, que está más abajo) */
+.tabla.tabla-ing th,.tabla.tabla-ing td{text-align:center}
+.tabla.tabla-ing th:not(:last-child),.tabla.tabla-ing td:not(:last-child){width:1%;white-space:nowrap}
+.tabla.tabla-ing th:last-child,.tabla.tabla-ing td:last-child{text-align:left}
+.tabla.tabla-ing td.at-vacio{text-align:center}
+.falta{display:inline-block;font-size:11px;font-weight:700;color:#B4521E;background:#FCE9DF;border-radius:99px;padding:2px 9px 3px;margin:2px 2px;white-space:nowrap}
+/* Tabla cerrada tipo planilla: todas las celdas con línea gris clara, borde exterior redondeado */
+.tabla-wrap{overflow-x:auto;overflow-y:hidden;border:1px solid #E6E2DA;border-radius:10px}
+.tabla{width:100%;border-collapse:collapse;font-size:13px}
+.tabla th{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:.55rem .7rem;background:#F7F6F3;border:1px solid #E6E2DA;white-space:nowrap}
+.tabla td{padding:.5rem .7rem;border:1px solid #ECE9E3;vertical-align:middle}
+/* El borde exterior lo pone .tabla-wrap: se sacan los de las celdas de los costados para que no quede doble */
+.tabla tr>:first-child{border-left:0}
+.tabla tr>:last-child{border-right:0}
+.tabla thead th{border-top:0}
+.tabla tbody tr:last-child td{border-bottom:0}
+.tabla .c{text-align:center}
+.tabla .dir{font-weight:700;white-space:nowrap}
+.tabla .hora{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text2)}
+.tabla .desc{color:var(--text2);min-width:240px}
 
 /* Pestaña Atrasados */
 .atr-card{padding:1.1rem 1.2rem 1.2rem;margin-bottom:14px}
@@ -188,23 +190,16 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (max-width:1439px){
   .semana{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
-@media (max-width:1200px){
-  .principal{grid-template-columns:1fr}
-  .panel{height:520px}
-  .kpis{grid-template-columns:repeat(3,1fr)}
-}
 @media (max-width:760px){
   .seg{max-width:100%;overflow-x:auto;scrollbar-width:none}
   .semana{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .dia,.principal>*{min-width:0}
-  .kpi-v{font-size:26px}
-  .kpis{grid-template-columns:repeat(2,1fr)}
+  .dia{min-width:0}
   .graficas{grid-template-columns:1fr}
   .mapa-card{height:540px}
   .barra-in{padding:10px 16px;min-height:64px}
   .titulo h1{font-size:21px}
   .titulo .ico{width:26px;height:26px;font-size:21px;line-height:26px}
-  .toggles,.ruta-sel{margin-left:0}
+  .toggles{margin-left:0}
   .calor{grid-template-columns:34px repeat(15,1fr);gap:2px;font-size:10px}
 }
 </style>
@@ -225,64 +220,15 @@ button{font:inherit;color:inherit;cursor:pointer}
   <!-- Categorías: cada botón muestra uno de los bloques .cat de abajo -->
   <nav class="cats" id="cats">
     <button data-cat="organizacion" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Organización del servicio</button>
-    <button data-cat="resumen"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Resumen</button>
-    <button data-cat="pendientes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Pendientes</button>
     <button data-cat="atrasados"><svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5"/><path d="M12 17.5v.01"/></svg>Atrasados</button>
     <button data-cat="operacion"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>Operación del día</button>
+    <button data-cat="borrar"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>Para borrar</button>
+    <button data-cat="ingreso"><svg viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13 6.5 5h11L20 13v6H4z"/><path d="M12 3v7M9.5 7.5 12 10l2.5-2.5"/></svg>Ingreso</button>
   </nav>
 
   <!-- Datos fijos del servicio: municipios y planta de cada día, vaciados fijos -->
   <div class="cat on" data-cat="organizacion">
   <section class="semana" id="semana"></section>
-  </div>
-
-  <div class="cat" data-cat="resumen">
-  <section class="kpis" id="kpis"></section>
-
-  <section class="principal">
-    <div class="card mapa-card">
-      <div class="mapa-bar">
-        <div class="seg capas" id="capas">
-          <button data-c="pendientes" class="on">Pendientes</button>
-          <button data-c="realizados">Realizados</button>
-          <button data-c="calor">Calor</button>
-          <button data-c="recorridos">Recorridos</button>
-        </div>
-        <div class="toggles" id="toggles"></div>
-        <div class="ruta-sel" id="rutaSel" hidden>
-          <input type="date" id="rutaDia">
-          <select id="rutaTransp"></select>
-        </div>
-      </div>
-      <div id="mapa"></div>
-      <div class="ruta-res" id="rutaRes"></div>
-      <div class="ficha" id="ficha"></div>
-    </div>
-
-    <aside class="card panel">
-      <nav class="tabs" id="tabs"></nav>
-      <div class="panel-h" id="panelH"></div>
-      <ul class="lista" id="lista"></ul>
-    </aside>
-  </section>
-  </div>
-
-  <div class="cat" data-cat="pendientes">
-  <section class="graficas">
-    <div class="card g">
-      <div class="g-h"><div class="g-t">Vaciados pendientes por antigüedad</div><div class="g-k" id="kAtraso"></div></div>
-      <div class="g-c"><canvas id="cAtraso"></canvas></div>
-    </div>
-    <div class="card g">
-      <div class="g-h"><div class="g-t">Días hasta la gestión</div><div class="g-k" style="color:var(--text3)">mediana · hoy</div></div>
-      <div class="g-c"><canvas id="cRespuesta"></canvas></div>
-    </div>
-    <div class="card g ancha">
-      <div class="g-h"><div class="g-t">Ingresos y gestiones por día</div>
-        <div class="g-k"><span><i style="--c:var(--asig)"></i>Solicitudes ingresadas</span><span><i style="--c:var(--hecho)"></i>Solicitudes gestionadas</span></div></div>
-      <div class="g-c"><canvas id="cDiario"></canvas></div>
-    </div>
-  </section>
   </div>
 
   <!-- Réplica de la hoja "Atrasados": vaciados pendientes por antigüedad y municipio, y el detalle -->
@@ -325,6 +271,30 @@ button{font:inherit;color:inherit;cursor:pointer}
   </section>
   </div>
 
+  <!-- Réplica de la hoja "Repetidos": direcciones con más de una solicitud abierta y descripciones que piden borrar -->
+  <div class="cat" data-cat="borrar">
+  <section class="card atr-card">
+    <div class="sec-t">Direcciones repetidas</div>
+    <div id="repLista"></div>
+  </section>
+  <section class="card atr-card">
+    <div class="sec-t">Descripción para borrar</div>
+    <div id="borLista"></div>
+  </section>
+  </div>
+
+  <!-- Réplica de la hoja "Seguimiento ingreso": solicitudes ingresadas en la fecha elegida -->
+  <div class="cat" data-cat="ingreso">
+  <section class="card atr-card">
+    <div class="ing-bar">
+      <label class="ing-f">Fecha <input type="date" id="ingDia"></label>
+      <span class="ing-tot" id="ingTot"></span>
+    </div>
+    <div class="tabla-wrap"><table class="tabla tabla-ing" id="tIngFalta"></table></div>
+    <div class="tabla-wrap"><table class="tabla tabla-ing" id="tIngOk"></table></div>
+  </section>
+  </div>
+
 </div>
 
 <script>
@@ -342,7 +312,7 @@ const MUNIS = ['A', 'B', 'C', 'CH', 'D', 'E', 'F', 'G'];
 
 // Vaciados fijos por día (planilla aparte, cargada a mano). Índice 0 = lunes.
 // Si cambian, editar esta lista. Color = el del municipio en esa planilla.
-// Van dentro de la tarjeta de cada día; se ve solo el nombre y el detalle (d) aparece al pasar el mouse.
+// Van dentro de la tarjeta de cada día; se ve solo el nombre (d queda como referencia).
 const VACIADOS_FIJOS = [
   [
     { n: 'Cooperativa Mesa 1', mun: 'F' },
@@ -385,10 +355,8 @@ const COL = { pend: '#eb6834', atr: '#d03b3b', asig: '#2a78d6', hecho: '#1baf7a'
 const RE_ENTREGA = /entrega|cambio/i;
 
 const st = {
-  periodo: 'hoy', dia: null, munis: new Set(), q: '',
-  capa: 'pendientes', tab: 'hoy', sel: null,
-  ver: { nuevo: true, atrasado: true, asignado: true },
-  rutaDia: null, rutaTransp: '',
+  munis: new Set(), q: '',  // filtros por municipio y búsqueda (sin controles por ahora)
+  ingDia: null,             // fecha elegida en la pestaña Ingreso (por defecto hoy)
 };
 let D, HOY, HOYk;
 
@@ -438,56 +406,27 @@ function preparar(json) {
 }
 
 // ── filtros ─────────────────────────────────────────────────────────────────
-function rango() {
-  if (st.dia) return [st.dia, st.dia];
-  const n = st.periodo === 'hoy' ? 0 : Number(st.periodo) - 1;
-  return [clave(sumarDias(HOY, -n)), HOYk];
-}
-const enRango = (k, [a, b]) => k && k >= a && k <= b;
 const pasaMuni = r => !st.munis.size || st.munis.has(r.mun);
 const pasaQ = r => !st.q || r.txt.includes(st.q);
 const base = () => D.filas.filter(r => pasaMuni(r) && pasaQ(r));
 
-function nombrePeriodo() {
-  if (st.dia) return fCorta(desdeClave(st.dia));
-  return { hoy: 'hoy', 7: 'últimos 7 días', 30: 'últimos 30 días' }[st.periodo];
-}
-
-function munisDelDia(k) {
-  const c = D.calendario[diaISO(desdeClave(k)) - 1];
-  return c ? c.municipios.split('+').map(s => s.trim()).filter(m => MUNIS.includes(m)) : [];
-}
-
 // ── conjuntos que replican las hojas de la planilla ─────────────────────────
 function conjuntos() {
-  const B = base(), R = rango();
-  const munisHoy = munisDelDia(HOYk);
-  const grupo = r => r.estado === 'Nuevo' ? (r.entrega ? 1 : 2) : 3;
+  const B = base();
   return {
-    B, R,
+    B,
     pendientes: B.filter(r => r.pendiente),
-    asignados: B.filter(r => r.estado === 'Asignado'),
     atrasados: B.filter(r => r.semanas >= 1).sort((a, b) => a.fSolD - b.fSolD),
-    hoy: B.filter(r => r.pendiente && munisHoy.includes(r.mun) && r.solK < HOYk)
-      .sort((a, b) => grupo(a) - grupo(b) || a.dir.localeCompare(b.dir)),
-    ingresos: B.filter(r => enRango(r.solK, R)).sort((a, b) => b.fSolD - a.fSolD),
-    gestiones: B.filter(r => enRango(r.gesK, R)).sort((a, b) => b.fGesD - a.fGesD),
-    repetidos: repetidos(B.filter(r => r.pendiente)),
-    munisHoy, grupo,
+    ingresos: B.filter(r => r.solK === HOYk),
+    gestiones: B.filter(r => r.gesK === HOYk).sort((a, b) => b.fGesD - a.fGesD),
   };
 }
 
-function repetidos(P) {
-  const g = {};
-  for (const r of P) (g[norm(r.dir)] ||= []).push(r);
-  return Object.values(g).filter(v => v.length > 1).flat()
-    .sort((a, b) => a.dir.localeCompare(b.dir) || a.fSolD - b.fSolD);
-}
-
-// ── semana y KPIs ───────────────────────────────────────────────────────────
+// ── semana ──────────────────────────────────────────────────────────────────
 
 function renderSemana(C) {
-  const hoyIso = diaISO(HOY);
+  // El calendario es fijo: "Hoy" va según el reloj, no según la fecha de la copia de datos
+  const hoyIso = diaISO(new Date());
   $('semana').innerHTML = D.calendario.slice(0, 6).map((c, i) => {
     const ms = c.municipios.split('+').map(s => s.trim());
     // "La Paloma y Geminis" con "B+F": cada municipio descarga en la planta de su misma posición
@@ -511,136 +450,11 @@ function renderSemana(C) {
   }).join('');
 }
 
-function renderKpis(C) {
-  const P = nombrePeriodo();
-  const bols = C.gestiones.reduce((s, r) => s + (r.cantB || 0), 0);
-  const k = [
-    { l: 'Pendientes', v: C.pendientes.filter(r => r.estado === 'Nuevo').length, c: COL.pend },
-    { l: 'Asignados', v: C.asignados.length, c: COL.asig },
-    { l: 'Atrasados', v: C.atrasados.length, c: COL.atr },
-    { l: 'Ingresos · ' + P, v: C.ingresos.length, c: '#6250d6' },
-    { l: 'Gestionadas · ' + P, v: C.gestiones.length, c: COL.hecho },
-    { l: 'Bolsones · ' + P, v: bols, c: '#0f7a55' },
-  ];
-  $('kpis').innerHTML = k.map(x => `<div class="kpi" style="--c:${x.c}">
-    <div class="kpi-l">${x.l}</div><div class="kpi-v num">${fmt(x.v)}</div></div>`).join('');
-}
-
-
-// ── mapa ────────────────────────────────────────────────────────────────────
-const mapa = L.map('mapa', { zoomControl: true, preferCanvas: true }).setView([-34.86, -56.16], 12);
-L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, {
-  maxNativeZoom: 18, maxZoom: 20, subdomains: 'abcd',
-  attribution: '&copy; OpenStreetMap &copy; CARTO',
-}).addTo(mapa);
-mapa.attributionControl.setPrefix(false);
-const capa = L.layerGroup().addTo(mapa);
-const rend = L.canvas({ padding: .3 });
-let heat = null, marcadores = new Map(), primeraVez = true;
-
+// ── ficha de un punto del mapa ──────────────────────────────────────────────
 function colorDe(r) {
   if (r.estado === 'Asignado') return COL.asig;
   if (r.estado === 'Nuevo') return r.semanas >= 1 ? COL.atr : COL.pend;
   return (r.cantB || 0) > 0 ? COL.hecho : COL.gris;
-}
-
-function puntos(C) {
-  if (st.capa === 'pendientes') return C.pendientes.filter(r =>
-    r.estado === 'Asignado' ? st.ver.asignado : r.semanas >= 1 ? st.ver.atrasado : st.ver.nuevo);
-  if (st.capa === 'realizados') return C.gestiones;
-  if (st.capa === 'calor') return C.ingresos;
-  return [];
-}
-
-function renderMapa(C) {
-  capa.clearLayers(); marcadores.clear();
-  if (heat) { mapa.removeLayer(heat); heat = null; }
-  $('rutaRes').classList.remove('on');
-  $('rutaSel').hidden = st.capa !== 'recorridos';
-  renderToggles(C);
-
-  if (st.capa === 'recorridos') return renderRuta(C);
-  const P = puntos(C).filter(r => r.lat && r.lng);
-  if (st.capa === 'calor') {
-    heat = L.heatLayer(P.map(r => [r.lat, r.lng, Math.min(4, r.cantSol || 1)]),
-      { radius: 22, blur: 18, maxZoom: 15, minOpacity: .3,
-        gradient: { .2: '#cde2fb', .4: '#86b6ef', .6: '#2a78d6', .8: '#eb6834', 1: '#d03b3b' } }).addTo(mapa);
-  } else {
-    // Atrasados arriba de todo para que no queden tapados
-    const orden = r => r.estado === 'Nuevo' ? (r.semanas >= 1 ? 3 : 2) : 1;
-    for (const r of P.sort((a, b) => orden(a) - orden(b))) {
-      const rad = st.capa === 'realizados' ? 4 + Math.sqrt(r.cantB || 0) * 2.2 : 6;
-      const m = L.circleMarker([r.lat, r.lng], {
-        renderer: rend, radius: rad, color: '#fff', weight: 1.5,
-        fillColor: colorDe(r), fillOpacity: .9,
-      }).bindTooltip(esc(r.dir), { direction: 'top', offset: [0, -6] })
-        .on('click', () => seleccionar(r, false));
-      m.addTo(capa); marcadores.set(r.id, m);
-    }
-  }
-  if (primeraVez && P.length && $('mapa').offsetWidth) { mapa.fitBounds(L.latLngBounds(P.map(r => [r.lat, r.lng])), { padding: [30, 30] }); primeraVez = false; }
-  if (st.sel) resaltar(st.sel);
-}
-
-function renderToggles(C) {
-  const t = $('toggles');
-  if (st.capa === 'pendientes') {
-    const n = { nuevo: 0, atrasado: 0, asignado: 0 };
-    for (const r of C.pendientes) n[r.estado === 'Asignado' ? 'asignado' : r.semanas >= 1 ? 'atrasado' : 'nuevo']++;
-    const def = [['nuevo', 'Pendientes', COL.pend], ['atrasado', 'Atrasados', COL.atr], ['asignado', 'Asignados', COL.asig]];
-    t.innerHTML = def.map(([k, l, c]) => `<button class="tg ${st.ver[k] ? '' : 'off'}" data-k="${k}" style="--c:${c}"><i></i><span class="num">${n[k]}</span> ${l}</button>`).join('');
-    t.querySelectorAll('.tg').forEach(b => b.onclick = () => { st.ver[b.dataset.k] = !st.ver[b.dataset.k]; renderMapa(conjuntos()); });
-  } else if (st.capa === 'realizados') {
-    const con = C.gestiones.filter(r => r.cantB > 0).length;
-    t.innerHTML = `<span class="tg" style="--c:${COL.hecho}"><i></i><span class="num">${con}</span> Con bolsones</span>
-      <span class="tg" style="--c:${COL.gris}"><i></i><span class="num">${C.gestiones.length - con}</span> Sin bolsones</span>`;
-  } else if (st.capa === 'calor') {
-    t.innerHTML = `<span class="tg" style="--c:${COL.asig}"><i></i><span class="num">${C.ingresos.length}</span> Ingresos · ${nombrePeriodo()}</span>`;
-  } else t.innerHTML = '';
-}
-
-// Recorrido de un transportista en un día: gestiones en orden de hora
-function renderRuta(C) {
-  const dias = [...new Set(D.filas.map(r => r.gesK).filter(Boolean))].sort().reverse();
-  if (!st.rutaDia || !dias.includes(st.rutaDia)) st.rutaDia = dias[0];
-  const rd = $('rutaDia');
-  rd.min = dias[dias.length - 1]; rd.max = dias[0]; rd.value = st.rutaDia;
-  const delDia = D.filas.filter(r => r.gesK === st.rutaDia && pasaMuni(r) && r.transp && r.transp !== '-');
-  const cuenta = {};
-  for (const r of delDia) cuenta[r.transp] = (cuenta[r.transp] || 0) + 1;
-  const ts = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a]);
-  if (!ts.includes(st.rutaTransp)) st.rutaTransp = ts[0] || '';
-  $('rutaTransp').innerHTML = ts.length
-    ? ts.map(t => `<option value="${esc(t)}" ${t === st.rutaTransp ? 'selected' : ''}>${esc(nomTransp(t))} (${cuenta[t]})</option>`).join('')
-    : '<option>Sin gestiones ese día</option>';
-  const P = delDia.filter(r => r.transp === st.rutaTransp && r.lat).sort((a, b) => a.fGesD - b.fGesD);
-  if (!P.length) return;
-  const ll = P.map(r => [r.lat, r.lng]);
-  L.polyline(ll, { color: COL.asig, weight: 3, opacity: .55, dashArray: '6 6' }).addTo(capa);
-  P.forEach((r, i) => {
-    const m = L.marker([r.lat, r.lng], {
-      icon: L.divIcon({ className: '', html: `<div class="num-ico" style="width:22px;height:22px;${r.cantB > 0 ? '' : 'background:' + COL.gris}">${i + 1}</div>`, iconSize: [22, 22], iconAnchor: [11, 11] }),
-    }).bindTooltip(`${i + 1}. ${esc(r.dir)} · ${pad(r.fGesD.getHours())}:${pad(r.fGesD.getMinutes())}`, { direction: 'top', offset: [0, -10] })
-      .on('click', () => seleccionar(r, false));
-    m.addTo(capa); marcadores.set(r.id, m);
-  });
-  let km = 0;
-  for (let i = 1; i < ll.length; i++) km += mapa.distance(ll[i - 1], ll[i]) / 1000;
-  const bols = P.reduce((s, r) => s + (r.cantB || 0), 0);
-  const ini = P[0].fGesD, fin = P[P.length - 1].fGesD;
-  $('rutaRes').innerHTML = `<span>Paradas</span><b class="num">${P.length}</b><span>Bolsones</span><b class="num">${fmt(bols)}</b>
-    <span>Horario</span><b class="num">${pad(ini.getHours())}:${pad(ini.getMinutes())}–${pad(fin.getHours())}:${pad(fin.getMinutes())}</b>
-    <span>Distancia aprox.</span><b class="num">${fmt(km)} km</b>`;
-  $('rutaRes').classList.add('on');
-  mapa.fitBounds(L.latLngBounds(ll), { padding: [60, 60], maxZoom: 16 });
-}
-
-function resaltar(r) {
-  marcadores.forEach((m, id) => {
-    if (m.setStyle) m.setStyle(id === r.id ? { color: '#1A1714', weight: 3 } : { color: '#fff', weight: 1.5 });
-  });
-  const m = marcadores.get(r.id);
-  if (m && m.bringToFront) m.bringToFront();
 }
 
 function fichaHTML(r) {
@@ -657,6 +471,7 @@ function fichaHTML(r) {
     <dl>
       ${fila('Solicitud', r.fSolD ? fHora(r.fSolD) + (dias != null ? ` · hace ${dias} d` : '') : '')}
       ${fila('Pedido', r.cantSol != null ? fmt(r.cantSol) + (r.entrega ? ' · entrega/cambio' : '') : '')}
+      ${fila('Teléfono', r.telefono)}
       ${fila('Nota', r.nota)}
       ${r.fGesD ? fila('Gestión', fHora(r.fGesD) + ` · ${dias} d después`) : ''}
       ${fila('Transportista', nomTransp(r.transp) === '' || r.transp === '-' ? '' : nomTransp(r.transp))}
@@ -666,22 +481,6 @@ function fichaHTML(r) {
       ${fila('Solicitud n.º', r.id)}
     </dl>`;
 }
-
-function seleccionar(r, volar) {
-  st.sel = r;
-  resaltar(r);
-  if (volar && r.lat) mapa.flyTo([r.lat, r.lng], Math.max(mapa.getZoom(), 16), { duration: .6 });
-  $('ficha').innerHTML = fichaHTML(r);
-  $('ficha').classList.add('on');
-  $('ficha').querySelector('.ficha-x').onclick = cerrarFicha;
-  document.querySelectorAll('.it').forEach(li => li.classList.toggle('sel', +li.dataset.id === r.id));
-}
-function cerrarFicha() {
-  st.sel = null; $('ficha').classList.remove('on');
-  marcadores.forEach(m => m.setStyle && m.setStyle({ color: '#fff', weight: 1.5 }));
-  document.querySelectorAll('.it.sel').forEach(li => li.classList.remove('sel'));
-}
-mapa.on('click', cerrarFicha);
 
 // ── mapa grande de Operación del día ────────────────────────────────────────
 // Se crea recién cuando la pestaña está visible (Leaflet necesita tamaño real).
@@ -741,63 +540,6 @@ function cerrarFichaOp() {
   marcadoresOp.forEach(m => m.setStyle({ color: '#fff', weight: 1.5 }));
 }
 
-// ── panel de listas (equivalente a las hojas de la planilla) ────────────────
-const TABS = [
-  { k: 'hoy', n: 'Realizar hoy' },
-  { k: 'atrasados', n: 'Atrasados' },
-  { k: 'asignados', n: 'Asignados' },
-  { k: 'ingresos', n: 'Ingresos' },
-  { k: 'gestiones', n: 'Gestiones' },
-  { k: 'repetidos', n: 'Repetidos' },
-];
-
-function renderPanel(C) {
-  $('tabs').innerHTML = TABS.map(t => `<button data-k="${t.k}" class="${st.tab === t.k ? 'on' : ''}">${t.n}<span class="n num">${C[t.k].length}</span></button>`).join('');
-  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { st.tab = b.dataset.k; renderPanel(conjuntos()); });
-
-  const L_ = C[st.tab];
-  const P = nombrePeriodo();
-  const cab = {
-    hoy: C.munisHoy.length ? `Municipios de hoy: <b>${C.munisHoy.join(' y ')}</b> · solicitudes anteriores a hoy` : 'Hoy no se trabaja',
-    atrasados: 'Vaciados que ya pasaron su día de servicio',
-    asignados: `${fmt(L_.length)} asignados · ${new Set(L_.map(r => r.transp)).size} transportistas`,
-    ingresos: `Ingresadas ${P}`,
-    gestiones: `Gestionadas ${P} · ${fmt(L_.reduce((s, r) => s + (r.cantB || 0), 0))} bolsones`,
-    repetidos: 'Misma dirección con más de una solicitud abierta',
-  }[st.tab];
-  $('panelH').innerHTML = `<span>${cab}</span>`;
-
-  if (!L_.length) { $('lista').innerHTML = '<li class="vacio">No hay solicitudes para mostrar.</li>'; return; }
-  const titulosHoy = { 1: 'Entregas y cambios', 2: 'Vaciados nuevos', 3: 'Asignados' };
-  let html = '', ultimo = null;
-  for (const r of L_.slice(0, 400)) {
-    if (st.tab === 'hoy' && C.grupo(r) !== ultimo) { ultimo = C.grupo(r); html += `<li class="grupo">${titulosHoy[ultimo]}</li>`; }
-    if (st.tab === 'asignados' && r.transp !== ultimo) { ultimo = r.transp; html += `<li class="grupo">${esc(nomTransp(r.transp) || 'Sin transportista')}</li>`; }
-    let der = '', sub = r.nota;
-    if (st.tab === 'gestiones') { der = `${pad(r.fGesD.getHours())}:${pad(r.fGesD.getMinutes())}`; sub = `${nomTransp(r.transp)} · ${fmt(r.cantB)} bols.${r.obs && !/autom/i.test(r.obs) ? ' · ' + r.obs : ''}`; }
-    else if (st.tab === 'ingresos') der = fHora(r.fSolD);
-    else if (st.tab === 'atrasados') der = `<span style="color:${COL.atr};font-weight:700">${r.semanas >= 4 ? '4+' : r.semanas} sem</span>`;
-    else der = r.fSolD ? `hace ${diasEntre(desdeClave(r.solK), HOY)} d` : '';
-    if (st.tab === 'repetidos') sub = `${r.estado} · ${fCorta(r.fSolD)}${r.nota ? ' · ' + r.nota : ''}`;
-    html += `<li class="it ${st.sel && st.sel.id === r.id ? 'sel' : ''}" data-id="${r.id}">${chipMuni(r.mun)}
-      <span class="it-d">${esc(r.dir)}</span><span class="it-r num">${der}</span>
-      ${sub ? `<span class="it-s">${esc(sub)}</span>` : ''}</li>`;
-  }
-  if (L_.length > 400) html += `<li class="vacio">Se muestran 400 de ${fmt(L_.length)}. Filtrá por municipio o buscá.</li>`;
-  $('lista').innerHTML = html;
-  const porId = new Map(L_.map(r => [r.id, r]));
-  $('lista').querySelectorAll('.it').forEach(li => li.onclick = () => {
-    const r = porId.get(+li.dataset.id);
-    if (!marcadores.has(r.id) && st.capa !== 'recorridos') {
-      // Si el punto no está en la capa actual, pasar a la capa que lo muestra
-      st.capa = r.pendiente ? 'pendientes' : 'realizados';
-      if (r.pendiente) st.ver = { nuevo: true, atrasado: true, asignado: true };
-      marcarCapa(); renderMapa(conjuntos());
-    }
-    seleccionar(r, true);
-  });
-}
-
 // ── gráficas ────────────────────────────────────────────────────────────────
 Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
 Chart.defaults.font.size = 12;
@@ -831,74 +573,6 @@ function barrasH(id, etiquetas, series) {
 }
 
 function renderGraficas(C) {
-  // 1. Pendientes por antigüedad (hoja Atrasados)
-  const pendM = MUNIS.filter(m => !st.munis.size || st.munis.has(m));
-  const vac = C.B.filter(r => r.semanas != null);
-  $('kAtraso').innerHTML = ATRASO.map(a => `<span><i style="--c:${a.c}"></i>${a.n}</span>`).join('');
-  grafica('cAtraso', {
-    type: 'bar',
-    data: {
-      labels: pendM,
-      datasets: ATRASO.map((a, i) => ({
-        label: a.n, backgroundColor: a.c, borderColor: '#fff', borderWidth: { top: 0, bottom: 0, left: 0, right: 2 },
-        borderRadius: 4, borderSkipped: false, maxBarThickness: 22,
-        data: pendM.map(m => vac.filter(r => r.mun === m && r.semanas === i).length),
-      })),
-    },
-    options: {
-      indexAxis: 'y', maintainAspectRatio: false, animation: { duration: 250 },
-      plugins: { legend: { display: false } },
-      scales: ejes(true, true),
-    },
-  }, !vac.length);
-
-  // 2. Días hasta la gestión por municipio (período)
-  const resp = pendM.map(m => {
-    const v = C.gestiones.filter(r => r.mun === m && r.fSolD).map(r => diasEntre(desdeClave(r.solK), desdeClave(r.gesK))).sort((a, b) => a - b);
-    return { m, n: v.length, med: v.length ? v[Math.floor((v.length - 1) / 2)] : null, prom: v.length ? v.reduce((a, b) => a + b, 0) / v.length : null };
-  });
-  grafica('cRespuesta', {
-    type: 'bar',
-    data: { labels: pendM, datasets: [{ data: resp.map(x => x.med), backgroundColor: COL.hecho, borderRadius: 4, borderSkipped: 'start', maxBarThickness: 34 }] },
-    options: {
-      maintainAspectRatio: false, animation: { duration: 250 },
-      plugins: { legend: { display: false } },
-      scales: ejes(false, false),
-    },
-  }, !C.gestiones.length);
-
-  // 3. Ingresos vs gestiones por día (todo el rango de datos)
-  const dias = [];
-  const min = D.filas.reduce((m, r) => r.solK && r.solK < m ? r.solK : m, HOYk);
-  for (let d = desdeClave(min); clave(d) <= HOYk; d = sumarDias(d, 1)) dias.push(clave(d));
-  const ing = {}, ges = {};
-  for (const r of C.B) { if (r.solK) ing[r.solK] = (ing[r.solK] || 0) + 1; if (r.gesK) ges[r.gesK] = (ges[r.gesK] || 0) + 1; }
-  const R = C.R;
-  grafica('cDiario', {
-    type: 'line',
-    data: {
-      labels: dias.map(k => { const d = desdeClave(k); return DIAS[diaISO(d) - 1].slice(0, 2) + ' ' + fCorta(d); }),
-      datasets: [
-        { label: 'Ingresadas', data: dias.map(k => ing[k] || 0), borderColor: COL.asig, backgroundColor: COL.asig },
-        { label: 'Gestionadas', data: dias.map(k => ges[k] || 0), borderColor: COL.hecho, backgroundColor: COL.hecho },
-      ].map(s => ({ ...s, borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 5, pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2 })),
-    },
-    options: {
-      maintainAspectRatio: false, animation: { duration: 250 }, interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { display: false } },
-      scales: { ...ejes(false, false), x: { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } } },
-    },
-    plugins: [{ // sombrea el período elegido
-      id: 'periodo', beforeDatasetsDraw(ch) {
-        const i0 = dias.indexOf(R[0]), i1 = dias.indexOf(R[1]);
-        if (i0 < 0 && i1 < 0) return;
-        const x = ch.scales.x, a = x.getPixelForValue(Math.max(0, i0)), b = x.getPixelForValue(i1 < 0 ? dias.length - 1 : i1);
-        const w = Math.max(10, b - a + 10), c = ch.ctx;
-        c.save(); c.fillStyle = 'rgba(57,116,94,.08)'; c.fillRect(a - 5, ch.chartArea.top, w, ch.chartArea.bottom - ch.chartArea.top); c.restore();
-      },
-    }],
-  });
-
   // 4. Gestiones por transportista (período)
   const porT = {};
   for (const r of C.gestiones) {
@@ -956,13 +630,9 @@ function renderCalor(C) {
 }
 
 // ── render general ──────────────────────────────────────────────────────────
-function marcarCapa() { $('capas').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.c === st.capa)); }
-
 function render() {
   const C = conjuntos();
-  renderSemana(C); renderKpis(C); marcarCapa();
-  renderMapa(C); renderPanel(C); renderGraficas(C); renderMapaOp(C); renderAtrasados(C);
-  if (st.sel && !C.B.some(r => r.id === st.sel.id)) cerrarFicha();
+  renderSemana(C); renderGraficas(C); renderMapaOp(C); renderAtrasados(C); renderBorrar(C); renderIngreso();
 }
 
 // ── pestaña Atrasados: misma tabla y detalle que la hoja "Atrasados" ────────
@@ -988,7 +658,6 @@ function renderAtrasados(C) {
   $('hmAtraso').innerHTML = html;
 
   // Detalle: ordenado por municipio y fecha, como la hoja. El municipio se ve por el color de la izquierda.
-  const ICO_CAL = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
   const ICO_RELOJ = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   // Sin atrasados: la tabla queda vacía y el recuadro del detalle lo avisa
   $('atLista').innerHTML = det.length ? `<div class="at-lista">${det.map(r => `
@@ -1000,30 +669,147 @@ function renderAtrasados(C) {
     : '<div class="at-vacio">No hay solicitudes atrasadas</div>';
 }
 
+// ── pestaña Para borrar: misma lógica que la hoja "Repetidos" ───────────────
+// Sobre las solicitudes abiertas (Nuevo o Asignado):
+//  - Direcciones repetidas: la misma dirección aparece más de una vez.
+//  - Descripción para borrar: el texto de la solicitud dice "borrar".
+const ICO_CAL = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+
+function renderBorrar(C) {
+  const grupos = {};
+  for (const r of C.pendientes) (grupos[r.dir.trim().toLowerCase()] ||= []).push(r);
+  const rep = Object.values(grupos).filter(g => g.length > 1)
+    .map(g => g.sort((a, b) => a.fSolD - b.fSolD))
+    .sort((a, b) => a[0].dir.localeCompare(b[0].dir));
+  $('repLista').innerHTML = rep.length ? `<div class="at-lista">${rep.map(g => `
+    <div class="at-it" style="--m:${COLOR_MUNI[g[0].mun] || COL.gris}">
+      <div class="at-dir">${esc(g[0].dir)}</div>
+      <div class="rep-sol">${g.map(r => `
+        <div class="rep-fila"><b>${esc(r.estado)}</b><span class="at-sub" style="display:inline-flex"><span>${ICO_CAL}Solicitada ${fHora(r.fSolD)}</span></span></div>
+        ${r.nota ? `<div class="at-desc">${esc(r.nota)}</div>` : ''}`).join('')}
+      </div>
+    </div>`).join('')}</div>`
+    : '<div class="at-vacio">No hay direcciones repetidas</div>';
+
+  const bor = C.pendientes.filter(r => /borrar/i.test(r.nota)).sort((a, b) => a.dir.localeCompare(b.dir));
+  $('borLista').innerHTML = bor.length ? `<div class="at-lista">${bor.map(r => `
+    <div class="at-it" style="--m:${COLOR_MUNI[r.mun] || COL.gris}">
+      <div class="at-dir">${esc(r.dir)}</div>
+      <div class="rep-fila"><b>${esc(r.estado)}</b><span class="at-sub" style="display:inline-flex"><span>${ICO_CAL}Solicitada ${fHora(r.fSolD)}</span></span></div>
+      <div class="at-desc">${esc(r.nota)}</div>
+    </div>`).join('')}</div>`
+    : '<div class="at-vacio">No hay solicitudes para borrar</div>';
+}
+
+// ── pestaña Ingreso: misma lógica que la hoja "Seguimiento ingreso" ─────────
+// Solicitudes cuya fecha de solicitud cae en el día elegido, ordenadas por hora.
+// Se separan en dos tablas: arriba las que les falta teléfono u horario en la descripción,
+// abajo las que tienen las dos cosas. El teléfono viene marcado en los datos (r.tel), porque
+// el número se borra antes de publicar; el horario se busca en el texto.
+const RE_HORARIO = new RegExp([
+  String.raw`\b\d{1,2}(:\d{2})?\s*(a|al|-|–)\s*\d{1,2}(:\d{2})?\b`,           // 8 a 12, 7:30 a 10:30
+  String.raw`\b\d{1,2}:\d{2}\b`,                                               // 13:30
+  String.raw`\b\d{1,2}\s*(hs?|hrs?|horas)\b`,                                  // 17 hs
+  String.raw`(desde|despu[eé]s de|a partir de|antes de|hasta|luego de)\s+(las?\s+)?\d`, // a partir de las 9
+  String.raw`\b(ma[ñn]ana|tarde|noche|mediod[ií]a|medio d[ií]a)\b`,            // en la mañana
+].join('|'), 'i');
+// Se busca en la nota sin teléfonos, para que los dígitos de un número no parezcan un horario
+const tieneHorario = r => RE_HORARIO.test(r.notaPub ?? r.nota ?? '');
+
+// "Datos de la solicitud" va última en las dos tablas: es la que se lleva el espacio sobrante
+function filasIngreso(L_, conFalta) {
+  if (!L_.length) return `<tr><td colspan="${conFalta ? 6 : 5}" class="at-vacio">No hay solicitudes</td></tr>`;
+  return L_.map(r => `<tr>
+      <td>${chipMuni(r.mun)}</td>
+      <td class="dir">${esc(r.dir)}</td>
+      <td class="hora">${pad(r.fSolD.getHours())}:${pad(r.fSolD.getMinutes())}</td>
+      <td class="num">${r.cantSol != null ? fmt(r.cantSol) : ''}</td>
+      ${conFalta ? `<td>${r.tel ? '' : '<span class="falta">Teléfono</span>'}${tieneHorario(r) ? '' : '<span class="falta">Horario</span>'}</td>` : ''}
+      <td class="desc">${esc(r.nota)}</td></tr>`).join('');
+}
+
+// Municipio, Dirección, Hora y Cantidad con el mismo ancho en las dos tablas, para que queden alineadas
+// (se mide cada tabla con su ancho justo y después se fija el mayor en todas las celdas de esa columna,
+// porque un ancho puesto solo en el encabezado pierde contra el width:1% de las celdas)
+function igualarColumnas() {
+  const tablas = [$('tIngFalta'), $('tIngOk')];
+  const celdas = (t, i) => [...t.querySelectorAll(`tr > :nth-child(${i + 1})`)].filter(c => !c.colSpan || c.colSpan === 1);
+  for (const t of tablas) for (let i = 0; i < 4; i++) celdas(t, i).forEach(c => c.style.width = '');
+  if (!$('tIngOk').offsetWidth) return; // pestaña oculta: se iguala al mostrarla
+  for (let i = 0; i < 4; i++) {
+    const ancho = Math.ceil(Math.max(...tablas.map(t => t.querySelector(`thead th:nth-child(${i + 1})`).getBoundingClientRect().width)));
+    for (const t of tablas) celdas(t, i).forEach(c => c.style.width = ancho + 'px');
+  }
+}
+
+function renderIngreso() {
+  const dias = D.filas.map(r => r.solK).filter(Boolean).sort();
+  const inp = $('ingDia');
+  inp.min = dias[0]; inp.max = HOYk;
+  if (!st.ingDia) st.ingDia = HOYk;
+  inp.value = st.ingDia;
+  const L_ = base().filter(r => r.solK === st.ingDia).sort((a, b) => a.fSolD - b.fSolD);
+  const ok = L_.filter(r => r.tel && tieneHorario(r)), falta = L_.filter(r => !(r.tel && tieneHorario(r)));
+  $('ingTot').innerHTML = `<b class="num">${L_.length}</b> ${L_.length === 1 ? 'solicitud' : 'solicitudes'}`;
+  const cab = extra => `<thead><tr><th>Municipio</th><th>Dirección</th><th>Hora</th><th>Cantidad</th>${extra ? '<th>Falta</th>' : ''}<th>Datos de la solicitud</th></tr></thead>`;
+  $('tIngFalta').innerHTML = cab(true) + `<tbody>${filasIngreso(falta, true)}</tbody>`;
+  $('tIngOk').innerHTML = cab(false) + `<tbody>${filasIngreso(ok, false)}</tbody>`;
+  igualarColumnas();
+}
+$('ingDia').onchange = e => { st.ingDia = e.target.value || HOYk; renderIngreso(); };
+
 // Categorías. La primera se abre por defecto; las demás quedan en la URL (#pendientes) para que al recargar siga ahí.
-const CATS = ['organizacion', 'resumen', 'pendientes', 'atrasados', 'operacion'];
+const CATS = ['organizacion', 'atrasados', 'operacion', 'borrar', 'ingreso'];
 function mostrarCat(k) {
   document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', b.dataset.cat === k));
   document.querySelectorAll('.cat').forEach(c => c.classList.toggle('on', c.dataset.cat === k));
   history.replaceState(null, '', k === CATS[0] ? location.pathname + location.search : '#' + k);
-  // El mapa y las gráficas se dibujaron ocultos (tamaño 0): se ajustan o se rehacen al mostrarlos
+  // Lo que se dibujó con la pestaña oculta (tamaño 0) se rehace al mostrarla
   if (!D) return;
-  if (k === 'resumen') { mapa.invalidateSize(); if (primeraVez) renderMapa(conjuntos()); }
-  else { const C = conjuntos(); renderGraficas(C); if (k === 'operacion') renderMapaOp(C); }
+  if (k === 'ingreso') igualarColumnas();
+  if (k !== 'operacion') return;
+  const C = conjuntos(); renderGraficas(C); renderMapaOp(C);
 }
 document.querySelectorAll('#cats button').forEach(b => b.onclick = () => mostrarCat(b.dataset.cat));
 if (CATS.includes(location.hash.slice(1))) mostrarCat(location.hash.slice(1));
-$('capas').querySelectorAll('button').forEach(b => b.onclick = () => { st.capa = b.dataset.c; marcarCapa(); renderMapa(conjuntos()); });
-$('rutaDia').onchange = e => { st.rutaDia = e.target.value; st.rutaTransp = ''; renderMapa(conjuntos()); };
-$('rutaTransp').onchange = e => { st.rutaTransp = e.target.value; renderMapa(conjuntos()); };
+
+// Datos privados (cifrados en el repo): teléfono y descripciones completas de cada solicitud.
+// La contraseña se pone una vez en la portada; si se entra directo a esta página, se pide acá.
+async function privados() {
+  try {
+    const llave = await COMLlave.obtener('datos/llave.json');
+    return await COMLlave.abrir(llave, 'datos/bolsones-privado.json');
+  } catch (err) {
+    console.warn('Sin datos privados:', err.message);
+    return null;
+  }
+}
+
+// Reemplaza en cada solicitud los textos públicos (sin teléfonos) por los completos
+function sumarPrivados(priv) {
+  if (!priv) return;
+  for (const r of D.filas) {
+    const p = priv[r.id];
+    if (!p) continue;
+    r.notaPub = r.nota;
+    r.nota = p[0] || r.nota;
+    r.obs = p[1] || r.obs;
+    r.edif = p[2] || r.edif;
+    r.telefono = p[3];
+  }
+}
 
 // La base se actualiza desde el botón de Bolsones del menú principal; acá solo se lee al abrir
 async function cargar() {
   try {
     const sep = CONFIG.fuente.includes('?') ? '&' : '?';
-    const res = await fetch(CONFIG.fuente + sep + 't=' + Date.now(), { cache: 'no-store' });
+    const [res, priv] = await Promise.all([
+      fetch(CONFIG.fuente + sep + 't=' + Date.now(), { cache: 'no-store' }),
+      privados(),
+    ]);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     D = preparar(await res.json());
+    sumarPrivados(priv);
     render();
     $('cargador')?.remove();
   } catch (err) {
