@@ -95,7 +95,8 @@ body.bloqueado .cover{visibility:hidden}
 // Para agregar una página: copiar el .html a paginas/ y sumar una línea en "paginas" de su servicio.
 const SERVICIOS = [
   { id: 'bolsones', nombre: 'Bolsones', color: 'amber',
-    base: 'bases/bolsones.json', webhook: null,
+    // n8n de la PC del COM (por ngrok): baja la base del Grafana y la sube a bases/
+    base: 'bases/bolsones.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/bolsones-actualizar',
     paginas: [
       { nombre: 'Supervisión de Bolsones', archivo: 'paginas/supervision-bolsones.html' },
     ] },
@@ -170,34 +171,53 @@ function mostrar(el, texto, error) {
 
 const ultima = iso => 'Última actualización ' + (fechaCorta(iso) || '—');
 
-// Lee la copia de la base y muestra su fecha
+// Lee la copia de la base, muestra su fecha y la devuelve
 async function leerBase(s, sec) {
   const est = sec.querySelector('.estado');
-  if (!s.base) { mostrar(est, ultima(null)); return; }
+  if (!s.base) { mostrar(est, ultima(null)); return null; }
   try {
     const res = await fetch(s.base + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
     mostrar(est, ultima(d.generado));
+    return d.generado;
   } catch (e) {
     mostrar(est, 'No se pudo leer la base', true);
+    return null;
   }
 }
 
-// Pide a n8n que regenere la base (cuando esté conectado) y vuelve a leerla
+const esperar = ms => new Promise(r => setTimeout(r, ms));
+
+// Pide a n8n que regenere la base. n8n la sube a GitHub y GitHub Pages tarda 1-2 minutos en
+// publicarla: el botón sigue girando y consulta cada 15 s hasta ver la base nueva (máx. 5 min).
 async function actualizarBase(s, sec) {
   const b = sec.querySelector('button'), est = sec.querySelector('.estado');
   if (!s.base && !s.webhook) return;
   b.classList.add('cargando');
   b.disabled = true;
   try {
-    if (s.webhook) {
-      const res = await fetch(s.webhook, { method: 'POST' });
+    if (!s.webhook) { await leerBase(s, sec); return; }
+    mostrar(est, 'Buscando datos nuevos…');
+    let r;
+    try {
+      // ngrok gratis muestra una página de aviso a los navegadores; este encabezado la saltea
+      const res = await fetch(s.webhook, { method: 'POST', headers: { 'ngrok-skip-browser-warning': '1' } });
       if (!res.ok) throw new Error('HTTP ' + res.status);
+      r = await res.json();
+    } catch (e) {
+      mostrar(est, 'No se pudo conectar con la PC del COM', true);
+      return;
     }
-    await leerBase(s, sec);
-  } catch (e) {
-    mostrar(est, 'No se pudo actualizar', true);
+    if (!r.actualizado) { mostrar(est, ultima(r.datosAl)); return; }
+    mostrar(est, 'Publicando… (1-2 min)');
+    for (let i = 0; i < 20; i++) {
+      await esperar(15000);
+      const g = await leerBase(s, sec);
+      if (g === r.datosAl) return;
+      mostrar(est, 'Publicando… (1-2 min)');
+    }
+    mostrar(est, 'Actualizado; se verá en unos minutos');
   } finally {
     b.classList.remove('cargando');
     b.disabled = false;
