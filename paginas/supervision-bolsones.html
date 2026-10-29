@@ -36,25 +36,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* Barra del título: igual a la de los dashboards de COM-Datos/Dashboard */
 .barra{background:linear-gradient(135deg,#0f172a 0%,#16213e 55%,#1b3f74 100%);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}
-/* Mismo ancho y márgenes que .wrap, para que los botones queden alineados con el contenido.
-   Tres columnas iguales a los lados para que el título quede centrado de verdad. */
-.barra-in{max-width:1440px;margin:0 auto;min-height:84px;padding:12px clamp(16px,2.5vw,2rem);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}
-.barra-in .back{justify-self:start}
-.back{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 8px;border-radius:7px;text-decoration:none;color:#c7d5ea;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;white-space:nowrap;transition:color .15s,background-color .15s}
-.back:hover{color:#fff;background:rgba(255,255,255,.08)}
-.back svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Mismo ancho y márgenes que .wrap; el título va centrado (se actualiza y se vuelve desde el menú principal) */
+.barra-in{max-width:1440px;margin:0 auto;min-height:84px;padding:12px clamp(16px,2.5vw,2rem);display:flex;justify-content:center;align-items:center}
 .titulo{display:flex;align-items:center;gap:10px;min-width:0}
 /* ♻ en versión emoji a color, igual que en COM-Datos/Dashboard/bolsones.html */
 .titulo .ico{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;font-size:26px;font-weight:700;line-height:32px;color:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
 .titulo h1{font-family:'Segoe UI',Arial,sans-serif;font-size:27px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
-/* Botón y texto al tamaño del enlace "Volver" de la izquierda */
-.act{justify-self:end;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-.actualizado{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:10px;color:#c7d5ea;white-space:nowrap;font-variant-numeric:tabular-nums}
-.btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:7px;padding:5px 10px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:600;transition:background-color .15s}
-.btn:hover{background:rgba(255,255,255,.2)}
-.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.btn.cargando svg{animation:gira .9s linear infinite}
-@keyframes gira{to{transform:rotate(360deg)}}
 
 /* Botoneras segmentadas (capas del mapa) */
 .seg{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:3px;box-shadow:var(--shadow)}
@@ -214,9 +201,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .graficas{grid-template-columns:1fr}
   .mapa-card{height:540px}
-  .barra-in{grid-template-columns:1fr auto;padding:10px 16px;gap:8px}
-  .barra-in .back{grid-column:1/-1}
-  .titulo{justify-self:start}
+  .barra-in{padding:10px 16px;min-height:64px}
   .titulo h1{font-size:21px}
   .titulo .ico{width:26px;height:26px;font-size:21px;line-height:26px}
   .toggles,.ruta-sel{margin-left:0}
@@ -228,19 +213,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 <div class="cargador" id="cargador">Cargando datos…</div>
 <header class="barra">
   <div class="barra-in">
-    <a class="back" href="../index.html" aria-label="Volver al menú principal">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      Volver al menú principal
-    </a>
     <div class="titulo">
       <span class="ico" aria-hidden="true">♻</span>
       <h1>Supervisión de Bolsones</h1>
-    </div>
-    <div class="act">
-      <button class="btn" id="actualizar">
-        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Actualizar
-      </button>
-      <span class="actualizado" id="actualizado"></span>
     </div>
   </div>
 </header>
@@ -509,11 +484,7 @@ function repetidos(P) {
     .sort((a, b) => a.dir.localeCompare(b.dir) || a.fSolD - b.fSolD);
 }
 
-// ── encabezado, semana y KPIs ───────────────────────────────────────────────
-// Momento de la última carga que salió bien (al abrir la página o con el botón)
-function renderEncabezado() {
-  $('actualizado').textContent = 'Actualizado ' + fHora(new Date());
-}
+// ── semana y KPIs ───────────────────────────────────────────────────────────
 
 function renderSemana(C) {
   const hoyIso = diaISO(HOY);
@@ -1046,24 +1017,19 @@ $('capas').querySelectorAll('button').forEach(b => b.onclick = () => { st.capa =
 $('rutaDia').onchange = e => { st.rutaDia = e.target.value; st.rutaTransp = ''; renderMapa(conjuntos()); };
 $('rutaTransp').onchange = e => { st.rutaTransp = e.target.value; renderMapa(conjuntos()); };
 
+// La base se actualiza desde el botón de Bolsones del menú principal; acá solo se lee al abrir
 async function cargar() {
-  const b = $('actualizar');
-  b.classList.add('cargando');
   try {
     const sep = CONFIG.fuente.includes('?') ? '&' : '?';
     const res = await fetch(CONFIG.fuente + sep + 't=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     D = preparar(await res.json());
-    renderEncabezado(); render();
+    render();
     $('cargador')?.remove();
   } catch (err) {
-    if ($('cargador')) $('cargador').textContent = 'No se pudieron cargar los datos (' + err.message + ').';
-    else alert('No se pudieron actualizar los datos (' + err.message + ').');
-  } finally {
-    b.classList.remove('cargando');
+    $('cargador').textContent = 'No se pudieron cargar los datos (' + err.message + ').';
   }
 }
-$('actualizar').onclick = cargar;
 cargar();
 
 window.addEventListener('pageshow', e => { if (e.persisted) location.reload(); });

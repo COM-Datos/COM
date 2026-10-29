@@ -1,14 +1,26 @@
 # COM
 
-Página web del Centro Operativo de Montevideo con una portada tipo lista que enlaza a varias páginas HTML.
+Página web del Centro Operativo de Montevideo: https://com-datos.github.io/COM/
 
 ## Estructura
 
 ```
-index.html        Portada con la lista de páginas y buscador
+index.html        Portada: un cuadro por servicio con sus páginas
 paginas/          Un .html por página
+paginas/datos/    Bases de datos (JSON) que comparten las páginas de cada servicio
 assets/           Logo y archivos compartidos
 ```
+
+## Servicios y bases de datos
+
+La portada tiene un cuadro por servicio (Bolsones, Agenda, Zona Limpia, Reclamos), definidos en el array `SERVICIOS` de `index.html`.
+Cada servicio tiene **una** base de datos que leen todas sus páginas:
+
+- `base`: archivo JSON de la base (con un campo `generado` = fecha de la copia). Hoy solo Bolsones tiene: `paginas/datos/bolsones.json`.
+- `webhook`: dirección de n8n que regenera esa base. Mientras sea `null`, el botón **Actualizar** del cuadro solo vuelve a leer la copia.
+
+La base se actualiza solo desde la portada; las páginas no tienen botón de actualizar propio.
+El botón **Actualizar GPS** está reservado (`GPS_WEBHOOK = null`).
 
 ## Agregar una página nueva
 
@@ -20,10 +32,12 @@ assets/           Logo y archivos compartidos
    <link rel="icon" type="image/png" href="../assets/logo-ciemsa.png">
    ```
 
-3. En `index.html`, sumar una línea al principio de `PAGINAS` (`color: 'blue'` opcional; sin él el ícono es verde):
+3. En `index.html`, sumar una línea en `paginas` del servicio que corresponda:
 
    ```js
-   { nombre: 'Nombre visible', archivo: 'paginas/archivo.html', color: 'blue' },
+   { nombre: 'Nombre visible', archivo: 'paginas/archivo.html' },
    ```
 
 4. Commit y push.
+
+El repo es público: las bases no deben llevar nombres, teléfonos ni emails.

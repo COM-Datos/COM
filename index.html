@@ -20,6 +20,7 @@
   --text3:#9E9890;
   --teal:#39745E;   --teal-bg:#DCEDE4;
   --blue:#346A92;   --blue-bg:#DDECF4;
+  --amber:#D2691E;  --amber-bg:#FCE3CD;
   --shadow:0 4px 20px rgba(26,23,20,.06),0 1px 3px rgba(26,23,20,.05);
   --shadow-hover:0 12px 32px rgba(26,23,20,.10),0 2px 6px rgba(26,23,20,.06);
 }
@@ -31,72 +32,193 @@ body{
     radial-gradient(circle at 88% 92%, #E7F3EE 0%, transparent 45%),
     var(--bg);
   background-attachment:fixed;
-  padding:clamp(2rem,6vh,4.5rem) 1rem;
+  padding:clamp(2rem,6vh,4rem) 1rem;
 }
-.cover{max-width:760px;margin:0 auto}
+.cover{max-width:1300px;margin:0 auto}
 .headline{font-size:clamp(30px,5.5vw,46px);font-weight:700;letter-spacing:-1.2px;line-height:1.08;text-align:center;text-wrap:balance}
-.rule{width:42px;height:3px;border-radius:2px;background:var(--teal);margin:1.4rem auto 2.4rem}
-.search{width:100%;font:inherit;font-size:14.5px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:.85rem 1.1rem;box-shadow:var(--shadow);outline:none;margin-bottom:1rem}
-.search:focus{border-color:var(--teal)}
-.list{display:flex;flex-direction:column;gap:10px;list-style:none}
-.item{display:flex;align-items:center;gap:1rem;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1rem 1.2rem;text-decoration:none;color:inherit;box-shadow:var(--shadow);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.rule{width:42px;height:3px;border-radius:2px;background:#C4BEB5;margin:1.4rem auto}
+.gps{display:flex;flex-direction:column;align-items:center;gap:6px}
+
+/* Botones de actualizar (mismo dibujo que el de Supervisión de Bolsones, en versión clara) */
+.btn{display:inline-flex;align-items:center;gap:6px;flex:none;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font:600 12px 'DM Sans',system-ui,sans-serif;cursor:pointer;transition:border-color .15s,background-color .15s}
+.btn:hover{border-color:var(--border2);background:#FBFAF8}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn.cargando svg{animation:gira .9s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+.estado{font-size:11px;color:var(--text3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.estado.err{color:#B02020}
+
+/* Cuadros por servicio */
+/* Los servicios en una fila; en pantallas angostas pasan a menos columnas */
+.servicios{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+@media (max-width:960px){.servicios{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.servicios{grid-template-columns:1fr}}
+.serv{background:rgba(255,255,255,.55);border:1px solid var(--border);border-radius:18px;padding:1rem .85rem;box-shadow:var(--shadow);--c:var(--teal);--cb:var(--teal-bg)}
+.serv-h{margin-bottom:.8rem;padding-bottom:.8rem;border-bottom:1px solid var(--border)}
+.serv-t{display:flex;align-items:center;gap:8px}
+.serv-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.serv-n{font-size:17px;font-weight:700;letter-spacing:-.2px}
+.serv-a{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px;margin-top:.55rem}
+.serv-a .btn,.gps .btn{padding:3px 8px;font-size:10.5px;gap:4px;border-radius:6px}
+.serv-a .btn svg,.gps .btn svg{width:10px;height:10px}
+.serv-a .estado,.gps .estado{font-size:10px}
+.list{display:flex;flex-direction:column;gap:8px;list-style:none}
+.item{display:flex;align-items:center;gap:.65rem;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:.7rem .75rem;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(26,23,20,.05);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .item:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);border-color:var(--border2)}
-.item-icon{flex:none;width:42px;height:42px;border-radius:12px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center}
-.item-icon svg{width:20px;height:20px;fill:none;stroke:var(--teal);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.acc-blue .item-icon{background:var(--blue-bg)}.acc-blue .item-icon svg{stroke:var(--blue)}
-.item-name{flex:1;min-width:0;font-size:15px;font-weight:600;letter-spacing:-.1px}
+.item-icon{flex:none;width:36px;height:36px;border-radius:10px;background:var(--cb);display:flex;align-items:center;justify-content:center}
+.item-icon svg{width:18px;height:18px;fill:none;stroke:var(--c);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.item-name{flex:1;min-width:0;font-size:14px;font-weight:600;letter-spacing:-.1px;line-height:1.25}
 .item-arrow{flex:none;color:var(--text3);font-size:18px}
-.empty{text-align:center;color:var(--text3);font-size:14px;padding:2rem 0}
+.sin{font-size:13px;color:var(--text3);padding:.4rem .2rem}
 </style>
 </head>
 <body>
 <div class="cover">
   <h1 class="headline">Centro Operativo de Montevideo</h1>
   <div class="rule"></div>
-  <input class="search" id="buscar" type="search" placeholder="Buscar…" autocomplete="off">
-  <ul class="list" id="lista"></ul>
-  <p class="empty" id="vacio" hidden></p>
+  <div class="gps">
+    <button class="btn" id="gps" type="button">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Actualizar GPS
+    </button>
+    <span class="estado" id="gps-estado"></span>
+  </div>
+  <div class="rule"></div>
+  <div class="servicios" id="servicios"></div>
 </div>
 <script>
-// Para agregar una página: copiar el .html a la carpeta paginas/ y sumar una línea acá.
-// Las más nuevas van arriba. color: 'blue' o se omite (verde).
-const PAGINAS = [
-  // { nombre: 'Nombre visible', archivo: 'paginas/archivo.html', color: 'blue' },
-  { nombre: 'Supervisión de Bolsones', archivo: 'paginas/supervision-bolsones.html' },
-  { nombre: 'Trazador de recorridos intradomiciliarios', archivo: 'paginas/trazador-recorridos.html' },
-  { nombre: 'Generador de informes intradomiciliarios', archivo: 'paginas/generador-informes.html' },
-  { nombre: 'Planificador de Agenda', archivo: 'paginas/planificador-agenda.html', color: 'blue' },
+// Un cuadro por servicio. Cada servicio tiene UNA base de datos que comparten todas sus páginas:
+//   base:    archivo JSON que leen las páginas del servicio (con un campo "generado" = fecha de la copia).
+//   webhook: dirección de n8n que regenera esa base. Mientras sea null, el botón solo vuelve a leer la copia.
+// Para agregar una página: copiar el .html a paginas/ y sumar una línea en "paginas" de su servicio.
+const SERVICIOS = [
+  { id: 'bolsones', nombre: 'Bolsones', color: 'amber',
+    base: 'paginas/datos/bolsones.json', webhook: null,
+    paginas: [
+      { nombre: 'Supervisión de Bolsones', archivo: 'paginas/supervision-bolsones.html' },
+    ] },
+  { id: 'agenda', nombre: 'Agenda', color: 'blue',
+    base: null, webhook: null,
+    paginas: [
+      { nombre: 'Planificador de Agenda', archivo: 'paginas/planificador-agenda.html' },
+    ] },
+  { id: 'zona-limpia', nombre: 'Zona Limpia', color: 'teal',
+    base: null, webhook: null,
+    paginas: [
+      { nombre: 'Trazador de recorridos intradomiciliarios', archivo: 'paginas/trazador-recorridos.html' },
+      { nombre: 'Generador de informes intradomiciliarios', archivo: 'paginas/generador-informes.html' },
+    ] },
+  { id: 'reclamos', nombre: 'Reclamos', color: 'teal',
+    base: null, webhook: null,
+    paginas: [] },
 ];
 
-const lista = document.getElementById('lista');
-const vacio = document.getElementById('vacio');
-const icono = '<svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h3"/><path d="M9 12h6M9 16h4"/></svg>';
+// Dirección de n8n para el botón "Actualizar GPS" (todavía sin definir).
+const GPS_WEBHOOK = null;
 
-function normalizar(s) {
-  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const $ = id => document.getElementById(id);
+const icono = '<svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h3"/><path d="M9 12h6M9 16h4"/></svg>';
+const iconoAct = '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>';
+
+function fechaCorta(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+  return m ? `${m[3]}/${m[2]}${m[4] ? ' ' + Number(m[4]) + ':' + m[5] : ''}` : '';
 }
 
-function render(filtro) {
-  const q = normalizar(filtro);
-  const items = PAGINAS.filter(p => normalizar(p.nombre).includes(q));
-  lista.innerHTML = '';
-  for (const p of items) {
+function armar() {
+  const cont = $('servicios');
+  for (const s of SERVICIOS) {
+    const sec = document.createElement('section');
+    sec.className = 'serv';
+    sec.dataset.id = s.id;
+    sec.style.setProperty('--c', `var(--${s.color})`);
+    sec.style.setProperty('--cb', `var(--${s.color}-bg)`);
+    sec.innerHTML = `<div class="serv-h">
+        <div class="serv-t"><span class="serv-dot"></span><h2 class="serv-n"></h2></div>
+        <div class="serv-a"><button class="btn" type="button">${iconoAct}Actualizar</button><span class="estado"></span></div>
+      </div><ul class="list"></ul>`;
+    sec.querySelector('.serv-n').textContent = s.nombre;
+    sec.querySelector('button').onclick = () => actualizarBase(s, sec);
+    cont.appendChild(sec);
+    listar(s, sec);
+    leerBase(s, sec);
+  }
+}
+
+function listar(s, sec) {
+  const ul = sec.querySelector('.list');
+  for (const p of s.paginas) {
     const li = document.createElement('li');
     const a = document.createElement('a');
-    a.className = 'item' + (p.color ? ' acc-' + p.color : '');
+    a.className = 'item';
     // ?v= evita que el navegador muestre una versión vieja guardada en caché
     a.href = p.archivo + '?v=' + Date.now();
     a.innerHTML = `<div class="item-icon">${icono}</div><div class="item-name"></div><div class="item-arrow">›</div>`;
     a.querySelector('.item-name').textContent = p.nombre;
     li.appendChild(a);
-    lista.appendChild(li);
+    ul.appendChild(li);
   }
-  vacio.hidden = items.length > 0;
-  vacio.textContent = PAGINAS.length ? 'No hay resultados para esa búsqueda.' : 'Todavía no hay páginas cargadas.';
+  if (!s.paginas.length) ul.innerHTML = '<li class="sin">Todavía no hay páginas.</li>';
 }
 
-document.getElementById('buscar').addEventListener('input', e => render(e.target.value));
-render('');
+function mostrar(el, texto, error) {
+  el.textContent = texto;
+  el.classList.toggle('err', !!error);
+}
+
+const ultima = iso => 'Última actualización ' + (fechaCorta(iso) || '—');
+
+// Lee la copia de la base y muestra su fecha
+async function leerBase(s, sec) {
+  const est = sec.querySelector('.estado');
+  if (!s.base) { mostrar(est, ultima(null)); return; }
+  try {
+    const res = await fetch(s.base + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    mostrar(est, ultima(d.generado));
+  } catch (e) {
+    mostrar(est, 'No se pudo leer la base', true);
+  }
+}
+
+// Pide a n8n que regenere la base (cuando esté conectado) y vuelve a leerla
+async function actualizarBase(s, sec) {
+  const b = sec.querySelector('button'), est = sec.querySelector('.estado');
+  if (!s.base && !s.webhook) return;
+  b.classList.add('cargando');
+  b.disabled = true;
+  try {
+    if (s.webhook) {
+      const res = await fetch(s.webhook, { method: 'POST' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+    }
+    await leerBase(s, sec);
+  } catch (e) {
+    mostrar(est, 'No se pudo actualizar', true);
+  } finally {
+    b.classList.remove('cargando');
+    b.disabled = false;
+  }
+}
+
+$('gps').onclick = async () => {
+  const b = $('gps'), est = $('gps-estado');
+  if (!GPS_WEBHOOK) return;
+  b.classList.add('cargando');
+  try {
+    const res = await fetch(GPS_WEBHOOK, { method: 'POST' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const ahora = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString();
+    mostrar(est, ultima(ahora));
+  } catch (e) {
+    mostrar(est, 'No se pudo actualizar el GPS', true);
+  } finally {
+    b.classList.remove('cargando');
+  }
+};
+
+armar();
+mostrar($('gps-estado'), ultima(null));
 
 window.addEventListener('pageshow', function (event) {
   if (event.persisted) window.location.reload();
