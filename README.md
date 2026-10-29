@@ -7,7 +7,7 @@ Página web del Centro Operativo de Montevideo: https://com-datos.github.io/COM/
 ```
 index.html        Portada: un cuadro por servicio con sus páginas
 paginas/          Un .html por página
-paginas/datos/    Bases de datos (JSON) que comparten las páginas de cada servicio
+bases/            Bases de datos (JSON) que comparten las páginas de cada servicio; las actualiza n8n
 assets/           Logo y archivos compartidos
 ```
 
@@ -16,7 +16,7 @@ assets/           Logo y archivos compartidos
 La portada tiene un cuadro por servicio (Bolsones, Agenda, Zona Limpia, Reclamos), definidos en el array `SERVICIOS` de `index.html`.
 Cada servicio tiene **una** base de datos que leen todas sus páginas:
 
-- `base`: archivo JSON de la base (con un campo `generado` = fecha de la copia). Hoy solo Bolsones tiene: `paginas/datos/bolsones.json`.
+- `base`: archivo JSON de la base (con un campo `generado` = fecha de la copia). Hoy solo Bolsones tiene: `bases/bolsones.json`.
 - `webhook`: dirección de n8n que regenera esa base. Mientras sea `null`, el botón **Actualizar** del cuadro solo vuelve a leer la copia.
 
 La base se actualiza solo desde la portada; las páginas no tienen botón de actualizar propio.
@@ -46,7 +46,7 @@ El repo es público: las bases no deben llevar nombres, teléfonos ni emails en 
 
 La portada pide una contraseña al abrir, una sola vez por navegador (`assets/llave.js`).
 Lo privado (por ejemplo, teléfonos y descripciones completas de Bolsones) va **cifrado** en
-`paginas/datos/*-privado.json`; `paginas/datos/llave.json` sirve para comprobar la contraseña y no la contiene.
+`bases/*-privado.json`; `bases/llave.json` sirve para comprobar la contraseña y no la contiene.
 Las páginas internas que usan datos privados cargan `../assets/llave.js` y piden la contraseña si se
 abren directo. Las páginas para clientes no la cargan y abren sin contraseña.
 

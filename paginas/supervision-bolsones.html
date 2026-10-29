@@ -303,38 +303,15 @@ button{font:inherit;color:inherit;cursor:pointer}
 // dashboard-bolsones/build_datos.py. Más adelante se cambia por el webhook de
 // n8n (vía ngrok), que tiene que devolver el mismo formato JSON.
 const CONFIG = {
-  fuente: 'datos/bolsones.json',
+  fuente: '../bases/bolsones.json',
+  // Qué municipio se atiende cada día, en qué planta descarga y los vaciados fijos. Se edita a mano.
+  calendario: '../bases/bolsones-calendario.json',
 };
 const CARTO_KEY = 'cb1_4dpf_1_b2ca9299be611862d5d23c88';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MUNIS = ['A', 'B', 'C', 'CH', 'D', 'E', 'F', 'G'];
 
-// Vaciados fijos por día (planilla aparte, cargada a mano). Índice 0 = lunes.
-// Si cambian, editar esta lista. Color = el del municipio en esa planilla.
-// Van dentro de la tarjeta de cada día; se ve solo el nombre (d queda como referencia).
-const VACIADOS_FIJOS = [
-  [
-    { n: 'Cooperativa Mesa 1', mun: 'F' },
-    { n: 'Plaza Alba Roballo', d: ['14:00 a 21:00'], mun: 'F' },
-    { n: 'Torre de los Caudillos', d: ['Retiro por Enrique Rodó 2395 bis', '10:00 a 12:00'], mun: 'CH' },
-  ],
-  [
-    { n: 'PTI Cerro', d: ['Edificio Verde 217 - Solytex', '10:30 a 15:00', 'Descargar en Durán'], mun: 'A' },
-    { n: 'Viviendas BPS', d: ['Bv. José Batlle y Ordóñez 6320', '8:00'], mun: 'G' },
-  ],
-  [
-    { n: 'Cooperativa Mesa 1', mun: 'F' },
-  ],
-  [
-    { n: 'Recorrido La Teja', d: ['Primer jueves del mes: de mañana', 'Tercer jueves del mes: de tarde'], mun: 'A' },
-  ],
-  [
-    { n: 'Cooperativa Mesa 1', mun: 'F' },
-    { n: 'Torre de los Caudillos', d: ['Retiro por Enrique Rodó 2395 bis', '10:00 a 12:00'], mun: 'CH' },
-  ],
-  [],
-];
 // Color de cada municipio: el mismo del formato condicional de la hoja Indicadores
 // de SUPERVISION BOLSONES. Se usa en todas las etiquetas de municipio de la página.
 const COLOR_MUNI = { A: '#C2A289', B: '#FFE599', C: '#B6D7A8', CH: '#6D9EEB', D: '#F9CB9C', E: '#93C47D', F: '#B4A7D6', G: '#A64D79' };
@@ -402,7 +379,7 @@ function preparar(json) {
     const d = desdeClave(r.solK);
     r.semanas = d >= prev ? 0 : Math.min(4, Math.ceil(diasEntre(d, prev) / 7));
   }
-  return { filas, calendario: json.calendario, generado: gen };
+  return { filas, calendario: [], generado: gen };
 }
 
 // ── filtros ─────────────────────────────────────────────────────────────────
@@ -428,23 +405,20 @@ function renderSemana(C) {
   // El calendario es fijo: "Hoy" va según el reloj, no según la fecha de la copia de datos
   const hoyIso = diaISO(new Date());
   $('semana').innerHTML = D.calendario.slice(0, 6).map((c, i) => {
-    const ms = c.municipios.split('+').map(s => s.trim());
-    // "La Paloma y Geminis" con "B+F": cada municipio descarga en la planta de su misma posición
-    const plantas = c.plantas.split(/\s+y\s+|,\s*/).map(x => x.trim());
-    const fijos = VACIADOS_FIJOS[i] || [];
+    const fijos = c.vaciadosFijos || [];
     return `<div class="dia ${i + 1 === hoyIso ? 'hoy' : ''}">
       <div class="dia-n"><span>${DIAS[i]}</span>${i + 1 === hoyIso ? '<span class="dia-hoy">Hoy</span>' : ''}</div>
       <div class="dia-sec dia-sec-cols"><span>Municipios</span><svg class="dia-fl" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg><span>Descarga</span></div>
-      <div class="dia-rows">${ms.map((m, j) => `
-        ${chipMuni(m, true)}
+      <div class="dia-rows">${c.municipios.map(x => `
+        ${chipMuni(x.municipio, true)}
         <svg class="dia-fl" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-        <span class="dia-p">${esc(plantas[j] ?? plantas[0])}</span>`).join('')}
+        <span class="dia-p">${esc(x.planta)}</span>`).join('')}
       </div>
       <div class="dia-sec sig">Vaciados fijos</div>
       <div class="dia-fijos">${fijos.length ? fijos.map(v => `
-        <div class="fv" style="--c:${COLOR_MUNI[v.mun] || COL.gris}">
-          <span class="mb">${esc(v.mun)}</span>
-          <div class="fv-n">${esc(v.n)}</div>
+        <div class="fv" style="--c:${COLOR_MUNI[v.municipio] || COL.gris}">
+          <span class="mb">${esc(v.municipio)}</span>
+          <div class="fv-n">${esc(v.nombre)}</div>
         </div>`).join('') : '<div class="dia-vacio">Sin vaciados fijos</div>'}
       </div></div>`;
   }).join('');
@@ -639,8 +613,8 @@ function render() {
 function renderAtrasados(C) {
   // Solo vaciados en estado Nuevo con al menos una semana de atraso (r.semanas viene de preparar())
   const atr = C.B.filter(r => r.semanas >= 1);
-  // Municipios en el orden en que se atienden en la semana (calendario de la hoja Division): B F A G E C D CH
-  const orden = [...new Set(D.calendario.flatMap(c => c.municipios.split('+').map(x => x.trim())).filter(m => MUNIS.includes(m)))];
+  // Municipios en el orden en que se atienden en la semana (según el calendario): B F A G E C D CH
+  const orden = [...new Set(D.calendario.flatMap(c => c.municipios.map(x => x.municipio)).filter(m => MUNIS.includes(m)))];
   const det = C.atrasados.slice().sort((a, b) => orden.indexOf(a.mun) - orden.indexOf(b.mun) || a.fSolD - b.fSolD);
 
   // Matriz semanas × municipio. Las casillas con atrasados van en el azul de la barra, más intenso cuantos más hay
@@ -777,8 +751,8 @@ if (CATS.includes(location.hash.slice(1))) mostrarCat(location.hash.slice(1));
 // La contraseña se pone una vez en la portada; si se entra directo a esta página, se pide acá.
 async function privados() {
   try {
-    const llave = await COMLlave.obtener('datos/llave.json');
-    return await COMLlave.abrir(llave, 'datos/bolsones-privado.json');
+    const llave = await COMLlave.obtener('../bases/llave.json');
+    return await COMLlave.abrir(llave, '../bases/bolsones-privado.json');
   } catch (err) {
     console.warn('Sin datos privados:', err.message);
     return null;
@@ -803,12 +777,15 @@ function sumarPrivados(priv) {
 async function cargar() {
   try {
     const sep = CONFIG.fuente.includes('?') ? '&' : '?';
-    const [res, priv] = await Promise.all([
+    const [res, cal, priv] = await Promise.all([
       fetch(CONFIG.fuente + sep + 't=' + Date.now(), { cache: 'no-store' }),
+      fetch(CONFIG.calendario + sep + 't=' + Date.now(), { cache: 'no-store' }),
       privados(),
     ]);
     if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!cal.ok) throw new Error('calendario HTTP ' + cal.status);
     D = preparar(await res.json());
+    D.calendario = (await cal.json()).dias;
     sumarPrivados(priv);
     render();
     $('cargador')?.remove();

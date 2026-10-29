@@ -95,7 +95,7 @@ body.bloqueado .cover{visibility:hidden}
 // Para agregar una página: copiar el .html a paginas/ y sumar una línea en "paginas" de su servicio.
 const SERVICIOS = [
   { id: 'bolsones', nombre: 'Bolsones', color: 'amber',
-    base: 'paginas/datos/bolsones.json', webhook: null,
+    base: 'bases/bolsones.json', webhook: null,
     paginas: [
       { nombre: 'Supervisión de Bolsones', archivo: 'paginas/supervision-bolsones.html' },
     ] },
@@ -227,7 +227,7 @@ function abrirPortada() {
   armar();
   mostrar($('gps-estado'), ultima(null));
 }
-COMLlave.obtener('paginas/datos/llave.json').then(abrirPortada, abrirPortada);
+COMLlave.obtener('bases/llave.json').then(abrirPortada, abrirPortada);
 
 window.addEventListener('pageshow', function (event) {
   if (event.persisted) window.location.reload();

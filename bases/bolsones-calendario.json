@@ -1,0 +1,69 @@
+{
+  "_nota": "Se edita a mano. Un día por entrada, de lunes a domingo. En cada día: qué municipio se atiende y en qué planta descarga, y los vaciados fijos (detalle es opcional).",
+  "dias": [
+    {
+      "dia": "Lunes",
+      "municipios": [
+        { "municipio": "B", "planta": "La Paloma" },
+        { "municipio": "F", "planta": "Geminis" }
+      ],
+      "vaciadosFijos": [
+        { "nombre": "Cooperativa Mesa 1", "municipio": "F" },
+        { "nombre": "Plaza Alba Roballo", "municipio": "F", "detalle": ["14:00 a 21:00"] },
+        { "nombre": "Torre de los Caudillos", "municipio": "CH", "detalle": ["Retiro por Enrique Rodó 2395 bis", "10:00 a 12:00"] }
+      ]
+    },
+    {
+      "dia": "Martes",
+      "municipios": [
+        { "municipio": "A", "planta": "La Paloma" },
+        { "municipio": "G", "planta": "Duran" }
+      ],
+      "vaciadosFijos": [
+        { "nombre": "PTI Cerro", "municipio": "A", "detalle": ["Edificio Verde 217 - Solytex", "10:30 a 15:00", "Descargar en Durán"] },
+        { "nombre": "Viviendas BPS", "municipio": "G", "detalle": ["Bv. José Batlle y Ordóñez 6320", "8:00"] }
+      ]
+    },
+    {
+      "dia": "Miércoles",
+      "municipios": [
+        { "municipio": "E", "planta": "Geminis" }
+      ],
+      "vaciadosFijos": [
+        { "nombre": "Cooperativa Mesa 1", "municipio": "F" }
+      ]
+    },
+    {
+      "dia": "Jueves",
+      "municipios": [
+        { "municipio": "C", "planta": "Burgues" },
+        { "municipio": "D", "planta": "Duran" }
+      ],
+      "vaciadosFijos": [
+        { "nombre": "Recorrido La Teja", "municipio": "A", "detalle": ["Primer jueves del mes: de mañana", "Tercer jueves del mes: de tarde"] }
+      ]
+    },
+    {
+      "dia": "Viernes",
+      "municipios": [
+        { "municipio": "CH", "planta": "Geminis" }
+      ],
+      "vaciadosFijos": [
+        { "nombre": "Cooperativa Mesa 1", "municipio": "F" },
+        { "nombre": "Torre de los Caudillos", "municipio": "CH", "detalle": ["Retiro por Enrique Rodó 2395 bis", "10:00 a 12:00"] }
+      ]
+    },
+    {
+      "dia": "Sábado",
+      "municipios": [
+        { "municipio": "CH", "planta": "Usina 5" }
+      ],
+      "vaciadosFijos": []
+    },
+    {
+      "dia": "Domingo",
+      "municipios": [],
+      "vaciadosFijos": []
+    }
+  ]
+}
