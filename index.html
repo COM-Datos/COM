@@ -189,8 +189,17 @@ async function leerBase(s, sec) {
 
 const esperar = ms => new Promise(r => setTimeout(r, ms));
 
+// Huella (SHA-256) del archivo publicado, para compararla con la que devuelve n8n
+async function firmaPublicada(s) {
+  const res = await fetch(s.base + '?t=' + Date.now(), { cache: 'no-store' });
+  if (!res.ok) return null;
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(await res.text()));
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Pide a n8n que regenere la base. n8n la sube a GitHub y GitHub Pages tarda 1-2 minutos en
-// publicarla: el botón sigue girando y consulta cada 15 s hasta ver la base nueva (máx. 5 min).
+// publicarla: el botón sigue girando y consulta cada 15 s hasta que el archivo publicado es
+// exactamente el nuevo (misma huella; la fecha sola no alcanza, puede no cambiar). Máx. 5 min.
 async function actualizarBase(s, sec) {
   const b = sec.querySelector('button'), est = sec.querySelector('.estado');
   if (!s.base && !s.webhook) return;
@@ -213,9 +222,7 @@ async function actualizarBase(s, sec) {
     mostrar(est, 'Publicando… (1-2 min)');
     for (let i = 0; i < 20; i++) {
       await esperar(15000);
-      const g = await leerBase(s, sec);
-      if (g === r.datosAl) return;
-      mostrar(est, 'Publicando… (1-2 min)');
+      if (await firmaPublicada(s) === r.firma) { await leerBase(s, sec); return; }
     }
     mostrar(est, 'Actualizado; se verá en unos minutos');
   } finally {
