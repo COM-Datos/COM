@@ -171,19 +171,34 @@ function mostrar(el, texto, error) {
 
 const ultima = iso => 'Última actualización ' + (fechaCorta(iso) || '—');
 
-// Lee la copia de la base, muestra su fecha y la devuelve
+// "29/10 19:07" en hora de Montevideo
+function horaLocal(fecha) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('es-UY', { timeZone: 'America/Montevideo', day: '2-digit', month: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(fecha).map(x => [x.type, x.value]));
+  return `${p.day}/${p.month} ${p.hour}:${p.minute}`;
+}
+
+// Cuándo se subió por última vez la base (último commit que la tocó, según GitHub)
+async function horaSubida(ruta) {
+  const res = await fetch(`https://api.github.com/repos/COM-Datos/COM/commits?path=${encodeURIComponent(ruta)}&per_page=1`, { cache: 'no-store' });
+  if (!res.ok) return null;
+  const c = (await res.json())[0];
+  return c ? horaLocal(new Date(c.commit.committer.date)) : null;
+}
+
+// Muestra "Actualizado dd/mm hh:mm" (hora en que se subió la base). Si GitHub no responde
+// (por ejemplo, por su límite de consultas), muestra la fecha del último dato de la base.
 async function leerBase(s, sec) {
   const est = sec.querySelector('.estado');
-  if (!s.base) { mostrar(est, ultima(null)); return null; }
+  if (!s.base) { mostrar(est, ultima(null)); return; }
   try {
+    const subida = await horaSubida(s.base).catch(() => null);
+    if (subida) { mostrar(est, 'Actualizado ' + subida); return; }
     const res = await fetch(s.base + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const d = await res.json();
-    mostrar(est, ultima(d.generado));
-    return d.generado;
+    mostrar(est, ultima((await res.json()).generado));
   } catch (e) {
     mostrar(est, 'No se pudo leer la base', true);
-    return null;
   }
 }
 
@@ -218,11 +233,12 @@ async function actualizarBase(s, sec) {
       mostrar(est, 'No se pudo conectar con la PC del COM', true);
       return;
     }
-    if (!r.actualizado) { mostrar(est, ultima(r.datosAl)); return; }
+    if (!r.actualizado) { await leerBase(s, sec); return; }
+    const subida = horaLocal(new Date());
     mostrar(est, 'Publicando… (1-2 min)');
     for (let i = 0; i < 20; i++) {
       await esperar(15000);
-      if (await firmaPublicada(s) === r.firma) { await leerBase(s, sec); return; }
+      if (await firmaPublicada(s) === r.firma) { mostrar(est, 'Actualizado ' + subida); return; }
     }
     mostrar(est, 'Actualizado; se verá en unos minutos');
   } finally {
