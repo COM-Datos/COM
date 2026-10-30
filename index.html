@@ -93,26 +93,28 @@ body.bloqueado .cover{visibility:hidden}
 //   base:    archivo JSON que leen las páginas del servicio (con un campo "generado" = fecha de la copia).
 //   webhook: dirección de n8n que regenera esa base. Mientras sea null, el botón solo vuelve a leer la copia.
 // Para agregar una página: copiar el .html a paginas/ y sumar una línea en "paginas" de su servicio.
-// Los webhooks son del n8n de la PC del COM (por ngrok): baja la base del Grafana (30 días) y la sube a bases/
+// Las bases están en el repo COM-Datos/bases (sin historial, para que no crezca) y las sube el n8n de la PC del COM,
+// que se avisa por ngrok: baja la base del Grafana (30 días), la sube y anota la hora en actualizado.json.
+const BASES = 'https://com-datos.github.io/bases/';
 const SERVICIOS = [
   { id: 'bolsones', nombre: 'Bolsones', color: 'amber',
-    base: 'bases/bolsones.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/bolsones-actualizar',
+    base: BASES + 'bolsones.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/bolsones-actualizar',
     paginas: [
       { nombre: 'Supervisión de Bolsones', archivo: 'paginas/supervision-bolsones.html' },
     ] },
   { id: 'agenda', nombre: 'Agenda', color: 'blue',
-    base: 'bases/agenda.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/agenda-actualizar',
+    base: BASES + 'agenda.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/agenda-actualizar',
     paginas: [
       { nombre: 'Planificador de Agenda', archivo: 'paginas/planificador-agenda.html' },
     ] },
   { id: 'zona-limpia', nombre: 'Zona Limpia', color: 'teal',
-    base: 'bases/zona-limpia.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/zona-limpia-actualizar',
+    base: BASES + 'zona-limpia.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/zona-limpia-actualizar',
     paginas: [
       { nombre: 'Trazador de recorridos intradomiciliarios', archivo: 'paginas/trazador-recorridos.html' },
       { nombre: 'Generador de informes intradomiciliarios', archivo: 'paginas/generador-informes.html' },
     ] },
   { id: 'reclamos', nombre: 'Reclamos', color: 'teal',
-    base: 'bases/reclamos.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/reclamos-actualizar',
+    base: BASES + 'reclamos.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/reclamos-actualizar',
     paginas: [] },
 ];
 
@@ -178,21 +180,21 @@ function horaLocal(fecha) {
   return `${p.day}/${p.month} ${p.hour}:${p.minute}`;
 }
 
-// Cuándo se subió por última vez la base (último commit que la tocó, según GitHub)
-async function horaSubida(ruta) {
-  const res = await fetch(`https://api.github.com/repos/COM-Datos/COM/commits?path=${encodeURIComponent(ruta)}&per_page=1`, { cache: 'no-store' });
+// Cuándo se subió por última vez la base de cada servicio (n8n lo anota en actualizado.json)
+async function horaSubida(s) {
+  const res = await fetch(BASES + 'actualizado.json?t=' + Date.now(), { cache: 'no-store' });
   if (!res.ok) return null;
-  const c = (await res.json())[0];
-  return c ? horaLocal(new Date(c.commit.committer.date)) : null;
+  const fecha = (await res.json())[s.id];
+  return fecha ? horaLocal(new Date(fecha)) : null;
 }
 
-// Muestra "Actualizado dd/mm hh:mm" (hora en que se subió la base). Si GitHub no responde
-// (por ejemplo, por su límite de consultas), muestra la fecha del último dato de la base.
+// Muestra "Actualizado dd/mm hh:mm" (hora en que se subió la base). Si no está anotada,
+// muestra la fecha del último dato de la base.
 async function leerBase(s, sec) {
   const est = sec.querySelector('.estado');
   if (!s.base) { mostrar(est, ultima(null)); return; }
   try {
-    const subida = await horaSubida(s.base).catch(() => null);
+    const subida = await horaSubida(s).catch(() => null);
     if (subida) { mostrar(est, 'Actualizado ' + subida); return; }
     const res = await fetch(s.base + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -270,7 +272,7 @@ function abrirPortada() {
   armar();
   mostrar($('gps-estado'), ultima(null));
 }
-COMLlave.obtener('bases/llave.json').then(abrirPortada, abrirPortada);
+COMLlave.obtener(BASES + 'llave.json').then(abrirPortada, abrirPortada);
 
 window.addEventListener('pageshow', function (event) {
   if (event.persisted) window.location.reload();

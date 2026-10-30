@@ -303,7 +303,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 // dashboard-bolsones/build_datos.py. Más adelante se cambia por el webhook de
 // n8n (vía ngrok), que tiene que devolver el mismo formato JSON.
 const CONFIG = {
-  fuente: '../bases/bolsones.json',
+  fuente: 'https://com-datos.github.io/bases/bolsones.json',
   // Qué municipio se atiende cada día, en qué planta descarga y los vaciados fijos. Se edita a mano.
   calendario: '../bases/bolsones-calendario.json',
 };
@@ -751,8 +751,8 @@ if (CATS.includes(location.hash.slice(1))) mostrarCat(location.hash.slice(1));
 // La contraseña se pone una vez en la portada; si se entra directo a esta página, se pide acá.
 async function privados() {
   try {
-    const llave = await COMLlave.obtener('../bases/llave.json');
-    return await COMLlave.abrir(llave, '../bases/bolsones-privado.json');
+    const llave = await COMLlave.obtener('https://com-datos.github.io/bases/llave.json');
+    return await COMLlave.abrir(llave, 'https://com-datos.github.io/bases/bolsones-privado.json');
   } catch (err) {
     console.warn('Sin datos privados:', err.message);
     return null;

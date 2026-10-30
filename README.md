@@ -7,7 +7,7 @@ Página web del Centro Operativo de Montevideo: https://com-datos.github.io/COM/
 ```
 index.html        Portada: un cuadro por servicio con sus páginas
 paginas/          Un .html por página
-bases/            Bases de datos (JSON) que comparten las páginas de cada servicio; las actualiza n8n
+bases/            Solo lo que se edita a mano (bolsones-calendario.json)
 assets/           Logo y archivos compartidos
 ```
 
@@ -16,8 +16,13 @@ assets/           Logo y archivos compartidos
 La portada tiene un cuadro por servicio (Bolsones, Agenda, Zona Limpia, Reclamos), definidos en el array `SERVICIOS` de `index.html`.
 Cada servicio tiene **una** base de datos que leen todas sus páginas:
 
-- `base`: archivo JSON de la base (con un campo `generado` = fecha de la copia). Hoy solo Bolsones tiene: `bases/bolsones.json`.
+- `base`: archivo JSON de la base (con un campo `generado` = fecha del último dato).
 - `webhook`: dirección de n8n que regenera esa base. Mientras sea `null`, el botón **Actualizar** del cuadro solo vuelve a leer la copia.
+
+Las bases **no están en este repo**: están en [COM-Datos/bases](https://github.com/COM-Datos/bases), publicadas en
+`https://com-datos.github.io/bases/<servicio>.json`. Las sube el n8n de la PC del COM al tocar **Actualizar**, y ese repo
+no guarda historial (cada subida reemplaza el único commit), así las bases de hasta ~30 MB no hacen crecer nada.
+La hora de la última subida de cada servicio está en `actualizado.json` de ese repo.
 
 La base se actualiza solo desde la portada; las páginas no tienen botón de actualizar propio.
 El botón **Actualizar GPS** está reservado (`GPS_WEBHOOK = null`).
@@ -46,7 +51,7 @@ El repo es público: las bases no deben llevar nombres, teléfonos ni emails en 
 
 La portada pide una contraseña al abrir, una sola vez por navegador (`assets/llave.js`).
 Lo privado (por ejemplo, teléfonos y descripciones completas de Bolsones) va **cifrado** en
-`bases/*-privado.json`; `bases/llave.json` sirve para comprobar la contraseña y no la contiene.
+`<servicio>-privado.json` del repo de bases; su `llave.json` sirve para comprobar la contraseña y no la contiene.
 Las páginas internas que usan datos privados cargan `../assets/llave.js` y piden la contraseña si se
 abren directo. Las páginas para clientes no la cargan y abren sin contraseña.
 
