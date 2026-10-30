@@ -1,6 +1,6 @@
 # COM
 
-Página web del Centro Operativo de Montevideo: https://com-datos.github.io/com/
+Página web del Centro Operativo de Montevideo: https://com-mvd.github.io/com/
 
 ## Estructura
 
@@ -19,8 +19,8 @@ Cada servicio tiene **una** base de datos que leen todas sus páginas:
 - `base`: archivo JSON de la base (con un campo `generado` = fecha del último dato).
 - `webhook`: dirección de n8n que regenera esa base. Mientras sea `null`, el botón **Actualizar** del cuadro solo vuelve a leer la copia.
 
-Las bases **no están en este repo**: están en [COM-Datos/bases](https://github.com/COM-Datos/bases), publicadas en
-`https://com-datos.github.io/bases/<servicio>.json`. Las sube el n8n de la PC del COM al tocar **Actualizar**, y ese repo
+Las bases **no están en este repo**: están en [com-mvd/bases](https://github.com/com-mvd/bases), publicadas en
+`https://com-mvd.github.io/bases/<servicio>.json`. Las sube el n8n de la PC del COM al tocar **Actualizar**, y ese repo
 no guarda historial (cada subida reemplaza el único commit), así las bases de hasta ~30 MB no hacen crecer nada.
 La hora de la última subida de cada servicio está en `actualizado.json` de ese repo.
 

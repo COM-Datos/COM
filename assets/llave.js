@@ -2,12 +2,12 @@
 //
 // Los datos privados (teléfonos, descripciones completas) están cifrados en el repo con AES-GCM.
 // La llave sale de la contraseña con PBKDF2-SHA256; la sal, las vueltas y una prueba para saber
-// si la contraseña es correcta están en llave.json del repo COM-Datos/bases (que NO contiene la contraseña).
+// si la contraseña es correcta están en llave.json del repo com-mvd/bases (que NO contiene la contraseña).
 // Se guarda la llave ya derivada, no la contraseña. Si la contraseña cambia, la prueba deja de
 // coincidir y se vuelve a pedir.
 //
-// Uso:  const llave = await COMLlave.obtener('https://com-datos.github.io/bases/llave.json');   // pide la contraseña si hace falta
-//       const datos = await COMLlave.abrir(llave, 'https://com-datos.github.io/bases/bolsones-privado.json');
+// Uso:  const llave = await COMLlave.obtener('https://com-mvd.github.io/bases/llave.json');   // pide la contraseña si hace falta
+//       const datos = await COMLlave.abrir(llave, 'https://com-mvd.github.io/bases/bolsones-privado.json');
 const COMLlave = (() => {
   const GUARDADA = 'com.llave';
   const desde64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));

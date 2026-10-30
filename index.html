@@ -93,9 +93,9 @@ body.bloqueado .cover{visibility:hidden}
 //   base:    archivo JSON que leen las páginas del servicio (con un campo "generado" = fecha de la copia).
 //   webhook: dirección de n8n que regenera esa base. Mientras sea null, el botón solo vuelve a leer la copia.
 // Para agregar una página: copiar el .html a paginas/ y sumar una línea en "paginas" de su servicio.
-// Las bases están en el repo COM-Datos/bases (sin historial, para que no crezca) y las sube el n8n de la PC del COM,
+// Las bases están en el repo com-mvd/bases (sin historial, para que no crezca) y las sube el n8n de la PC del COM,
 // que se avisa por ngrok: baja la base del Grafana (30 días), la sube y anota la hora en actualizado.json.
-const BASES = 'https://com-datos.github.io/bases/';
+const BASES = 'https://com-mvd.github.io/bases/';
 const SERVICIOS = [
   { id: 'bolsones', nombre: 'Bolsones', color: 'amber',
     base: BASES + 'bolsones.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/bolsones-actualizar',
