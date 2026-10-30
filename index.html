@@ -93,26 +93,26 @@ body.bloqueado .cover{visibility:hidden}
 //   base:    archivo JSON que leen las páginas del servicio (con un campo "generado" = fecha de la copia).
 //   webhook: dirección de n8n que regenera esa base. Mientras sea null, el botón solo vuelve a leer la copia.
 // Para agregar una página: copiar el .html a paginas/ y sumar una línea en "paginas" de su servicio.
+// Los webhooks son del n8n de la PC del COM (por ngrok): baja la base del Grafana (30 días) y la sube a bases/
 const SERVICIOS = [
   { id: 'bolsones', nombre: 'Bolsones', color: 'amber',
-    // n8n de la PC del COM (por ngrok): baja la base del Grafana y la sube a bases/
     base: 'bases/bolsones.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/bolsones-actualizar',
     paginas: [
       { nombre: 'Supervisión de Bolsones', archivo: 'paginas/supervision-bolsones.html' },
     ] },
   { id: 'agenda', nombre: 'Agenda', color: 'blue',
-    base: null, webhook: null,
+    base: 'bases/agenda.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/agenda-actualizar',
     paginas: [
       { nombre: 'Planificador de Agenda', archivo: 'paginas/planificador-agenda.html' },
     ] },
   { id: 'zona-limpia', nombre: 'Zona Limpia', color: 'teal',
-    base: null, webhook: null,
+    base: 'bases/zona-limpia.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/zona-limpia-actualizar',
     paginas: [
       { nombre: 'Trazador de recorridos intradomiciliarios', archivo: 'paginas/trazador-recorridos.html' },
       { nombre: 'Generador de informes intradomiciliarios', archivo: 'paginas/generador-informes.html' },
     ] },
   { id: 'reclamos', nombre: 'Reclamos', color: 'teal',
-    base: null, webhook: null,
+    base: 'bases/reclamos.json', webhook: 'https://blatancy-scouting-virtuous.ngrok-free.dev/webhook/reclamos-actualizar',
     paginas: [] },
 ];
 
