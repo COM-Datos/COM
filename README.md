@@ -1,6 +1,6 @@
 # COM
 
-Página web del Centro Operativo de Montevideo: https://com-datos.github.io/COM/
+Página web del Centro Operativo de Montevideo: https://com-datos.github.io/com/
 
 ## Estructura
 
