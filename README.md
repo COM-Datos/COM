@@ -6,7 +6,7 @@ Página web del Centro Operativo de Montevideo: https://com-mvd.github.io/com/
 
 ```
 index.html        Portada: un cuadro por servicio con sus páginas
-paginas/          Un .html por página
+*.html            Un .html por página, al lado de index.html (así los links quedan cortos: /com/supervision-bolsones.html)
 bases/            Solo lo que se edita a mano (bolsones-calendario.json)
 assets/           Logo y archivos compartidos
 ```
@@ -29,18 +29,18 @@ El botón **Actualizar GPS** está reservado (`GPS_WEBHOOK = null`).
 
 ## Agregar una página nueva
 
-1. Copiar el `.html` a la carpeta `paginas/`.
+1. Copiar el `.html` a la raíz del repo, al lado de `index.html`.
 2. En el `<head>` del nuevo `.html`, dejar la pestaña como el resto del sitio:
 
    ```html
    <title>COM</title>
-   <link rel="icon" type="image/png" href="../assets/logo-ciemsa.png">
+   <link rel="icon" type="image/png" href="assets/logo-ciemsa.png">
    ```
 
 3. En `index.html`, sumar una línea en `paginas` del servicio que corresponda:
 
    ```js
-   { nombre: 'Nombre visible', archivo: 'paginas/archivo.html' },
+   { nombre: 'Nombre visible', archivo: 'archivo.html' },
    ```
 
 4. Commit y push.
