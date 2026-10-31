@@ -7,7 +7,6 @@ Página web del Centro Operativo de Montevideo: https://com-mvd.github.io/com/
 ```
 index.html        Portada: un cuadro por servicio con sus páginas
 *.html            Un .html por página, al lado de index.html (así los links quedan cortos: /com/supervision-bolsones.html)
-bases/            Solo lo que se edita a mano (bolsones-calendario.json)
 assets/           Logo y archivos compartidos
 ```
 
@@ -20,7 +19,7 @@ Cada servicio tiene **una** base de datos que leen todas sus páginas:
 - `webhook`: dirección de n8n que regenera esa base. Mientras sea `null`, el botón **Actualizar** del cuadro solo vuelve a leer la copia.
 
 Las bases **no están en este repo**: están en [com-mvd/bases](https://github.com/com-mvd/bases), publicadas en
-`https://com-mvd.github.io/bases/<servicio>.json`. Las sube el n8n de la PC del COM al tocar **Actualizar**, y ese repo
+`https://com-mvd.github.io/bases/<servicio>.json`. Las sube el n8n de la PC del COM al tocar **Actualizar** (últimos 90 días), y ese repo
 no guarda historial (cada subida reemplaza el único commit), así las bases de hasta ~30 MB no hacen crecer nada.
 La hora de la última subida de cada servicio está en `actualizado.json` de ese repo.
 

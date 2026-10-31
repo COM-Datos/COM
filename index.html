@@ -94,7 +94,7 @@ body.bloqueado .cover{visibility:hidden}
 //   webhook: dirección de n8n que regenera esa base. Mientras sea null, el botón solo vuelve a leer la copia.
 // Para agregar una página: copiar el .html al lado de este index.html y sumar una línea en "paginas" de su servicio.
 // Las bases están en el repo com-mvd/bases (sin historial, para que no crezca) y las sube el n8n de la PC del COM,
-// que se avisa por ngrok: baja la base del Grafana (30 días), la sube y anota la hora en actualizado.json.
+// que se avisa por ngrok: baja la base del Grafana (90 días), la sube y anota la hora en actualizado.json.
 const BASES = 'https://com-mvd.github.io/bases/';
 const SERVICIOS = [
   { id: 'bolsones', nombre: 'Bolsones', color: 'amber',
@@ -180,11 +180,14 @@ function horaLocal(fecha) {
   return `${p.day}/${p.month} ${p.hour}:${p.minute}`;
 }
 
-// Cuándo se subió por última vez la base de cada servicio (n8n lo anota en actualizado.json)
-async function horaSubida(s) {
+// Cuándo se subió por última vez la base de cada servicio, tal como la anota n8n en actualizado.json
+async function subidaPublicada(s) {
   const res = await fetch(BASES + 'actualizado.json?t=' + Date.now(), { cache: 'no-store' });
   if (!res.ok) return null;
-  const fecha = (await res.json())[s.id];
+  return (await res.json())[s.id] || null;
+}
+async function horaSubida(s) {
+  const fecha = await subidaPublicada(s);
   return fecha ? horaLocal(new Date(fecha)) : null;
 }
 
@@ -206,17 +209,10 @@ async function leerBase(s, sec) {
 
 const esperar = ms => new Promise(r => setTimeout(r, ms));
 
-// Huella (SHA-256) del archivo publicado, para compararla con la que devuelve n8n
-async function firmaPublicada(s) {
-  const res = await fetch(s.base + '?t=' + Date.now(), { cache: 'no-store' });
-  if (!res.ok) return null;
-  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(await res.text()));
-  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 // Pide a n8n que regenere la base. n8n la sube a GitHub y GitHub Pages tarda 1-2 minutos en
-// publicarla: el botón sigue girando y consulta cada 15 s hasta que el archivo publicado es
-// exactamente el nuevo (misma huella; la fecha sola no alcanza, puede no cambiar). Máx. 5 min.
+// publicarla: el botón sigue girando y consulta cada 15 s hasta que actualizado.json publicado
+// tiene la hora de esta subida (sale en el mismo commit que la base, así que llegan juntos).
+// Se mira ese archivo chico y no la base, que puede pesar 40 MB. Máx. 5 min.
 async function actualizarBase(s, sec) {
   const b = sec.querySelector('button'), est = sec.querySelector('.estado');
   if (!s.base && !s.webhook) return;
@@ -237,10 +233,9 @@ async function actualizarBase(s, sec) {
       return;
     }
     if (!r.actualizado) { await leerBase(s, sec); return; }
-    const subida = horaLocal(new Date());
     for (let i = 0; i < 20; i++) {
       await esperar(15000);
-      if (await firmaPublicada(s) === r.firma) { mostrar(est, 'Actualizado ' + subida); return; }
+      if (await subidaPublicada(s).catch(() => null) === r.subida) { mostrar(est, 'Actualizado ' + horaLocal(new Date(r.subida))); return; }
     }
     mostrar(est, 'Actualizado; se verá en unos minutos');
   } finally {
